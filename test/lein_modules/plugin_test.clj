@@ -15,8 +15,8 @@
 (deftest scalar-override
   (let [dad (parent project)
         grandpa (parent dad)]
-    (is (false? (-> grandpa :profiles :inherited :omit-source)))
-    (is (true? (-> dad :profiles :inherited :omit-source)))
+    (is (false? (-> grandpa :modules :inherited :omit-source)))
+    (is (true? (-> dad :modules :inherited :omit-source)))
     (is (nil? (-> project :omit-source)))
     (is (true? (-> (inherit project) :omit-source)))))
 

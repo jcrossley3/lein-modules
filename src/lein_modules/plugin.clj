@@ -28,7 +28,7 @@
   (loop [p project, acc '()]
     (if (nil? p)
       (remove nil? acc)
-      (recur (parent p) (conj acc (-> p :profiles :inherited))))))
+      (recur (parent p) (conj acc (-> p :modules :inherited))))))
 
 (defn inherit
   "Apply :inherited profiles from parents, where a parent profile
