@@ -30,3 +30,8 @@
     (is (= '[x/x "1.1.1"] (-> child :dependencies first)))
     (is (= '[y/y "1.0.2"] (-> child :dependencies second)))
     (is (= '[scope/scope "9.9.9" :scope "pom"] (-> child :dependencies (nth 2))))))
+
+(deftest middleware-only-if-config-present
+  (is (not (identical? project (middleware project))))
+  (let [uncle (prj/read "test-resources/grandparent/uncle/project.clj")]
+    (is (identical? uncle (middleware uncle)))))

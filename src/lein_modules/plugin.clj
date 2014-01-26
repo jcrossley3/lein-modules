@@ -52,4 +52,6 @@
 (defn middleware
   "Implicit Leiningen middleware"
   [project]
-  (-> project inherit versionize))
+  (if (-> project config empty?)
+    project
+    (-> project inherit versionize)))
