@@ -29,3 +29,9 @@
   (is (nil? (:java-source-paths project)))
   (is (.startsWith (-> (inherit project) :java-source-paths first) (:root project))))
 
+(deftest versionization
+  (let [child (versionize project)]
+    (is (= "3.0" (-> child :parent second)))
+    (is (= '[x/x "1.1.1"] (-> child :dependencies first)))
+    (is (= '[y/y "1.0.2"] (-> child :dependencies second)))
+    (is (= '[scope/scope "9.9.9" :scope "pom"] (-> child :dependencies (nth 2))))))

@@ -21,14 +21,45 @@
                 (io/file "project.clj")
                 str))))
 
-(defn inherited-profiles
-  "Traverse all parents to accumulate a list of :inherited profiles,
+(def modules-config
+  "Traverse all parents to accumulate a list of plugin config,
   ordered by least to most immediate ancestors"
+  (memoize
+    (fn [project]
+      (loop [p project, acc '()]
+        (if (nil? p)
+          (remove nil? acc)
+          (recur (parent p) (conj acc (-> p :modules))))))))
+
+(defn versions
+  "Merge dependency management maps of :versions from the
+  modules-config"
   [project]
-  (loop [p project, acc '()]
-    (if (nil? p)
-      (remove nil? acc)
-      (recur (parent p) (conj acc (-> p :modules :inherited))))))
+  (->> (modules-config project) (map :versions) (apply merge {})))
+
+(defn replace-keyword
+  [d vmap]
+  (let [m (prj/dependency-map d)
+        v (:version m)]
+    (if (keyword? v)
+      (prj/dependency-vec (assoc m :version (v vmap)))
+      d)))
+
+(defn versionize
+  "Substitute keywords with actual versions from the :versions
+  modules-config"
+  [project]
+  (let [vmap (versions project)
+        f #(for [d %] (replace-keyword d vmap))]
+    (-> project
+      (update-in [:dependencies] f)
+      (update-in [:plugins] f)          ; chicken or egg?
+      (update-in [:parent] replace-keyword vmap))))
+
+(defn inherited-profiles
+  "Extract a list of :inherited profiles from the modules-config"
+  [project]
+  (remove nil? (->> (modules-config project) (map :inherited))))
 
 (defn inherit
   "Apply :inherited profiles from parents, where a parent profile
@@ -40,4 +71,4 @@
 (defn middleware
   "Implicit Leiningen middleware"
   [project]
-  (inherit project))
+  (-> project inherit versionize))
