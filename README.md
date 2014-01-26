@@ -26,15 +26,15 @@ of your "parent" projects. The `:modules` map has three keys:
   into each project map of your "child" modules.
 * `:versions` - Similar to Maven's dependency management feature, but
   **much** simpler, child modules can use keywords instead of version
-  strings in their dependency/plugins/parent vectors. Those keywords
+  strings in their dependencies/plugins/parent vectors. Those keywords
   are associated to actual version strings in this map, allowing you
   to maintain the versions of your child modules' shared dependencies
   in a single place.
 * `:dirs` - **TODO** Normally, child modules are discovered by
-  searching for project.clj files, but this vector can override that
-  behavior by specifying exactly which directories contain child
-  modules. Whether this option is specified or not, build order is
-  determined by child module interdependence.
+  searching for descendant project.clj files, but this vector can
+  override that behavior by specifying exactly which directories
+  contain child modules. Whether this option is specified or not,
+  build order is determined by child module interdependence.
 
 The plugin relies on the `:relative-path` attribute of the `:parent`
 vector in each module's project.clj. Via implicit Leiningen
@@ -49,8 +49,13 @@ projects, with the most immediate ancestors taking precedence.
   metadata and expand any composite keys
 * Have plugin put `[lein-modules "0.1.0-SNAPSHOT"]` in the `:plugins`
   vector of `:without-profiles` metadata via middeware? Otherwise, the
-  pom and jar tasks unmerge [:default] and versionization doesn't
-  occur
+  pom and jar tasks unmerge the `:default` profiles, and
+  versionization doesn't occur
+* Versionization of `:plugins` is potentially a bit of a chicken or
+  egg problem -- plugins are loaded before middleware is applied, so
+  keyword versions will disappoint pomegranate. Instead, we may need
+  to introduce some subtask that spits out versionized project.clj
+  files in each child dir.
 
 
 ## License
