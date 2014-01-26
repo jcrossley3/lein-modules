@@ -1,16 +1,11 @@
 (ns lein-modules.plugin-test
   (:use clojure.test
-        lein-modules.plugin)
+        lein-modules.plugin
+        [leiningen.modules :only (parent)])
   (:require [leiningen.core.project :as prj]
             [clojure.java.io        :as io]))
 
 (def project (prj/read "test-resources/grandparent/parent/child/project.clj"))
-
-(deftest parent-project-has-correct-root
-  (let [parent (parent project)
-        proot (into [] (.split (:root parent) java.io.File/separator))
-        croot (into [] (.split (:root project) java.io.File/separator))]
-    (is (= proot (butlast croot)))))
 
 (deftest scalar-override
   (let [dad (parent project)
