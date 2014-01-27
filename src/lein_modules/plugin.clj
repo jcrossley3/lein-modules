@@ -1,7 +1,6 @@
 (ns lein-modules.plugin
   (:use [leiningen.modules :only (config)])
-  (:require [leiningen.core.project :as prj]
-            [clojure.java.io :as io]))
+  (:require [leiningen.core.project :as prj]))
 
 ;;; A hack to prevent recursive middleware calls
 ;;; https://github.com/technomancy/leiningen/issues/1151

@@ -15,6 +15,7 @@
   (let [ann     (prj/read "test-resources/grandparent/parent/child/project.clj")
         nancy   (prj/read "test-resources/grandparent/parent/sibling/project.clj")
         flip    (prj/read "test-resources/grandparent/parent/project.clj")
+        fiona   (prj/read "test-resources/grandparent/stepmom/project.clj")
         uncle   (prj/read "test-resources/grandparent/uncle/project.clj")
         grandpa (prj/read "test-resources/grandparent/project.clj")]
     (is (child? flip ann))
@@ -24,4 +25,5 @@
     (is (not (child? uncle ann)))
     (is (empty? (children ann)))
     (is (= #{ann nancy} (set (children flip))))
+    (is (= #{ann nancy} (set (children fiona))))
     (is (= [flip] (children grandpa)))))
