@@ -34,12 +34,16 @@ which may contain the following keys:
   ancestors, with the most immediate taking precedence, i.e. a parent
   will override a grandparent.
 * `:versions` - Similar -- but **much** simpler -- to Maven's
-  dependency management feature, child modules can use keywords
-  instead of version strings in their dependencies, plugins, and
-  parent vectors. Those keywords are mapped to actual version strings
-  in this map, allowing you to maintain the versions of your child
-  modules' shared dependencies in a single place. Just like with
-  `:inherited`, the most immediate ancestors take precedence.
+  dependency management feature, versions for child module
+  dependencies, plugins, and parent vectors will be expanded from this
+  map. Symbols, e.g. `group-id/artifact-id`, from project dependency
+  vectors are mapped to version strings that will replace those in the
+  child project map. The map is recursively searched (values may be
+  keys in the same map) to find a matching version string, useful when
+  multiple dependencies share the same version. This allows you to
+  maintain the versions of your child modules' shared dependencies in
+  a single place. Just like with `:inherited`, the most immediate
+  ancestors take precedence.
 * `:dirs` - Normally, child modules are discovered by searching for
   project.clj files beneath the project's `:root` with a proper
   `:parent` reference, but this vector can override that behavior by
@@ -55,17 +59,9 @@ which may contain the following keys:
   parent profiles should be merged when the same profile is active in
   the child. Note `:profiles` and `:active-profiles` on project's
   metadata and expand any composite keys
-* Have plugin put `[lein-modules "0.1.0-SNAPSHOT"]` in the `:plugins`
-  vector of `:without-profiles` metadata via middeware? Otherwise, the
-  pom and jar tasks unmerge the `:default` profiles, and
-  versionization doesn't occur. On second thought, it may be better to
-  just be explicit and expect every module involved to include the
-  plugin.
 * Versionization of `:plugins` is potentially a bit of a chicken or
   egg problem -- plugins are loaded before middleware is applied, so
-  keyword versions will disappoint pomegranate. Instead, we may need
-  to introduce some subtask that spits out versionized project.clj
-  files in each child dir.
+  keyword versions will disappoint pomegranate.
 * Consider replacing the version keyword stuff with a plugin subtask
   that spits out actual project.clj files for child modules, using the
   version strings from the `:versions` map that would then be keyed by

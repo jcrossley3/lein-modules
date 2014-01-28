@@ -17,24 +17,24 @@
   [project]
   (->> (config project) (map :versions) (apply merge {})))
 
-(defn replace-keyword
+(defn expand-version
   [d vmap]
-  (let [m (prj/dependency-map d)
-        v (:version m)]
-    (if (keyword? v)
-      (prj/dependency-vec (assoc m :version (v vmap)))
-      d)))
+  (if-let [[id ver & opts] d]
+    (loop [k (id vmap)]
+      (if (contains? vmap k)
+        (recur (k vmap))
+        (apply vector id (or k ver) opts)))))
 
 (defn versionize
   "Substitute keywords with actual versions from the :versions
   modules config"
   [project]
   (let [vmap (versions project)
-        f #(for [d %] (replace-keyword d vmap))]
+        f #(for [d %] (expand-version d vmap))]
     (-> project
       (update-in [:dependencies] f)
       (update-in [:plugins] f)          ; chicken or egg?
-      (update-in [:parent] replace-keyword vmap))))
+      (update-in [:parent] expand-version vmap))))
 
 (defn inherited-profiles
   "Extract a list of :inherited profiles from the modules config"
