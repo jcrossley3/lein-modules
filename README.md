@@ -51,7 +51,6 @@ which may contain the following keys:
 
 ## TODO
 
-* Determine build order by child module interdependence
 * Add an optional `:profiles` key in `:inherited` that indicates which
   parent profiles should be merged when the same profile is active in
   the child. Note `:profiles` and `:active-profiles` on project's
@@ -67,6 +66,14 @@ which may contain the following keys:
   keyword versions will disappoint pomegranate. Instead, we may need
   to introduce some subtask that spits out versionized project.clj
   files in each child dir.
+* Consider replacing the version keyword stuff with a plugin subtask
+  that spits out actual project.clj files for child modules, using the
+  version strings from the `:versions` map that would then be keyed by
+  symbols rather than keywords. The symbols would match the first
+  element of the dependency vectors found in `:dependencies`,
+  `:plugins`, and `:parent` in the child project maps. We'd want to
+  preserve formatting and comments and probably leave `:profiles`
+  alone. That could make straight regex replacement tricky.
 
 
 ## License
