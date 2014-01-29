@@ -59,17 +59,14 @@ which may contain the following keys:
   parent profiles should be merged when the same profile is active in
   the child. Note `:profiles` and `:active-profiles` on project's
   metadata and expand any composite keys
-* Versionization of `:plugins` is potentially a bit of a chicken or
-  egg problem -- plugins are loaded before middleware is applied, so
-  keyword versions will disappoint pomegranate.
-* Consider replacing the version keyword stuff with a plugin subtask
-  that spits out actual project.clj files for child modules, using the
-  version strings from the `:versions` map that would then be keyed by
-  symbols rather than keywords. The symbols would match the first
-  element of the dependency vectors found in `:dependencies`,
-  `:plugins`, and `:parent` in the child project maps. We'd want to
-  preserve formatting and comments and probably leave `:profiles`
-  alone. That could make straight regex replacement tricky.
+* Versionization of `:plugins` is a bit of a chicken or egg problem:
+  plugins are loaded before middleware is applied, so non-string
+  versions will disappoint pomegranate.
+* Consider replacing auto-versionization with a plugin subtask that
+  spits out actual project.clj files for child modules, using the
+  version strings from the `:versions` map. We'd want to preserve
+  formatting and comments and probably leave `:profiles` alone. That
+  could make straight regex replacement tricky.
 
 
 ## License
