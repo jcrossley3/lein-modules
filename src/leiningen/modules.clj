@@ -71,11 +71,12 @@
   [project]
   (let [m (reduce #(assoc % (id %2) %2) {} (children project))
         builds (set (keys m))
-        deps (reduce (fn [acc p]
-                       (assoc acc (id p)
-                              (intersection builds (deep-deps p))))
+        deps (reduce
+               (fn [acc p]
+                 (assoc acc (id p)
+                        (intersection builds (deep-deps p))))
                {} (vals m))]
-    (map m (topological-sort deps))))
+    (cons project (map m (topological-sort deps)))))
 
 (defn modules
   "Run a task in all child projects in dependent order"

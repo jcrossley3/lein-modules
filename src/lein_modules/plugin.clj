@@ -26,8 +26,8 @@
         (apply vector id (or k ver) opts)))))
 
 (defn versionize
-  "Substitute keywords with actual versions from the :versions
-  modules config"
+  "Substitute versions in dependency vectors with actual versions from
+  the :versions modules config"
   [project]
   (let [vmap (versions project)
         f #(for [d %] (expand-version d vmap))]
