@@ -66,8 +66,7 @@
 (defn interdependents
   "Return a project's dependency symbols in common with targets"
   [project targets]
-  (->> project
-    :dependencies
+  (->> (cons (:parent project) (:dependencies project))
     (map first)
     (filter (set targets))))
 
