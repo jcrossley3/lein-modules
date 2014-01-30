@@ -53,6 +53,41 @@ which may contain the following keys:
   module is in a sibling directory. Regardless of this option, build
   order is always determined by child module interdependence.
 
+## Example
+
+Hopefully, an example will clarify the above:
+
+```clj
+(defproject org.immutant/immutant-modules-parent "1.0.3-SNAPSHOT"
+  :plugins [[lein-modules "0.1.0-SNAPSHOT"]]
+  :packaging "pom"
+
+  :modules  {:inherited
+               {:dependencies [[org.clojure/clojure _]
+                               [org.jboss.as/jboss-as-server _]]
+                :repositories [["project:odd upstream"
+                                "http://repository-projectodd.forge.cloudbees.com/upstream"]]
+                :source-paths       ^:replace ["src/main/clojure"]
+                :test-paths         ^:replace ["src/test/clojure"]
+                :java-source-paths  ^:replace ["src/main/java"]
+                :aliases            ^:replace {"all" ["do" "clean," "test," "install"]}}
+  
+             :versions {org.clojure/clojure           "1.5.1"
+                        leiningen-core/leiningen-core "2.3.4"
+
+                        :immutant                     "1.0.3-SNAPSHOT"
+                        :jbossas                      "7.2.x.slim.incremental.12"
+
+                        org.immutant/immutant-modules-parent :immutant
+                        org.immutant/immutant-core-module    :immutant
+                        org.immutant/immutant-common-module  :immutant
+
+                        org.jboss.as/jboss-as-server         :jbossas
+                        org.jboss.as/jboss-as-jmx            :jbossas}
+
+             :dirs ["messaging" "../web"]})
+```
+
 ## TODO
 
 * Add an optional `:profiles` key in `:inherited` that indicates which
