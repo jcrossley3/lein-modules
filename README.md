@@ -11,7 +11,7 @@ to a Leiningen one.
 
 I'm not done yet.
 
-## Usage
+## Installation
 
 Put `[lein-modules "0.1.0-SNAPSHOT"]` into the `:plugins` vector of
 your `:user` profile.
@@ -22,6 +22,21 @@ include a `:modules` map in their project.clj.
 Still, if you'd rather not install it globally, put
 `[lein-modules "0.1.0-SNAPSHOT"]` into the `:plugins` vector of every
 associated module's project.clj.
+
+## Usage
+
+From a parent module, use the `modules` higher-order task to build its
+"child" projects in the correct order, e.g.
+
+    $ lein modules clean
+    $ lein modules test
+    $ lein modules jar
+    $ lein modules analias
+
+From a child module, just use `lein` as you normally would, relying on
+the plugin's implicit middleware to 1) merge `:inherited` profiles,
+and 2) update the child's project map from its ancestors' `:versions`
+maps, both of which are described in the next section.
 
 ## Configuration
 
@@ -55,7 +70,7 @@ which may contain the following keys:
 
 ## Example
 
-Hopefully, an example will clarify the above:
+Hopefully, a configuration example will clarify the above:
 
 ```clj
 (defproject org.immutant/immutant-modules-parent "1.0.3-SNAPSHOT"
