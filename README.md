@@ -1,15 +1,16 @@
 # lein-modules
 
-On my continuum of hatred for all build tools,
-[Leiningen](http://leiningen.org) and [Maven](http://maven.apache.org)
-are at opposite ends. This plugin is the result of my desire to
-transform the
+On my build tool continuum of hate, [Leiningen](http://leiningen.org)
+and [Maven](http://maven.apache.org) are at opposite ends. This plugin
+is the result of my desire to transform the
 [Immutant source tree](http://github.com/immutant/immutant) from a
 Maven
 [multi-module project](http://maven.apache.org/guides/mini/guide-multiple-modules.html)
 to a Leiningen one.
 
-I'm not done yet.
+Features include the building of child projects in dependency order,
+flexible project inheritance based on Leiningen profiles, and a simple
+dependency management mechanism.
 
 ## Installation
 
