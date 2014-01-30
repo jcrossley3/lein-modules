@@ -26,4 +26,5 @@
     (is (empty? (children ann)))
     (is (= #{ann nancy} (set (children flip))))
     (is (= #{ann nancy} (set (children fiona))))
-    (is (= [flip] (children grandpa)))))
+    (is (= [flip] (children grandpa)))
+    (is (= #{flip ann nancy} (set (progeny grandpa))))))

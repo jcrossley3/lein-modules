@@ -1,5 +1,4 @@
 (ns leiningen.modules
-  (:use [clojure.set :only (intersection union)])
   (:require [leiningen.core.project :as prj]
             [leiningen.core.main :as main]
             [clojure.java.io :as io]))
@@ -42,20 +41,18 @@
       (map (comp prj/read str))
       (filter (partial child? project)))))
 
+(defn progeny
+  "Recursively return the project's children"
+  [project]
+  (let [childs (children project)]
+    (if (empty? childs)
+      childs
+      (mapcat #(cons % (progeny %)) childs))))
+
 (defn id
   "Returns fully-qualified symbol identifier for project"
   [project]
   (symbol (:group project) (:name project)))
-
-(defn deep-deps
-  "Returns a set of symbols denoting all the dependencies of a
-  project and its descendants"
-  [project]
-  (let [deps (set (->> project :dependencies (map first)))
-        kids (children project)]
-    (if (empty? kids)
-      deps
-      (apply union deps (map deep-deps kids)))))
 
 (defn topological-sort [deps]
   "A topological sort of a mapping of graph nodes to their edges (credit Jon Harrop)"
@@ -64,28 +61,36 @@
       result
       (if-let [dep (some (fn [[k v]] (if (empty? (remove resolved v)) k)) deps)]
         (recur (dissoc deps dep) (conj resolved dep) (conj result dep))
-        (throw (Exception. "Cyclic dependency!"))))))
+        (throw (Exception. (apply str "Cyclic dependency: " (interpose ", " (keys deps)))))))))
+
+(defn interdependents
+  "Return a project's dependency symbols in common with targets"
+  [project targets]
+  (->> project
+    :dependencies
+    (map first)
+    (filter (set targets))))
 
 (defn ordered-builds
-  "Represent the inter-dependence of child projects and apply a topological sort"
+  "Represent the inter-dependence of project descendants and apply a
+  topological sort"
   [project]
-  (let [m (reduce #(assoc % (id %2) %2) {} (children project))
-        builds (set (keys m))
+  (let [all  (reduce #(assoc % (id %2) %2) {} (progeny project))
+        tgts (keys all)
         deps (reduce
-               (fn [acc p]
-                 (assoc acc (id p)
-                        (intersection builds (deep-deps p))))
-               {} (vals m))]
-    (cons project (map m (topological-sort deps)))))
+               (fn [acc p] (assoc acc (id p) (interdependents p tgts)))
+               {}
+               (vals all))]
+    (cons project (map all (topological-sort deps)))))
 
 (defn modules
-  "Run a task in all child projects in dependent order"
+  "Run a task in all related projects in dependent order"
   [project task & args]
   (let [modules (ordered-builds project)]
     (println "------------------------------------------------------------------------")
     (println " Module build order:")
     (doseq [p modules]
-      (println "  " (id p)))
+      (println "  " (:name p)))
     (doseq [project modules]
       (let [project (prj/init-project project)
             task (main/lookup-alias task project)]

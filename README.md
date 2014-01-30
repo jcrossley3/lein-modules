@@ -33,25 +33,25 @@ which may contain the following keys:
   plugin middleware will merge the `:inherited` maps from all its
   ancestors, with the most immediate taking precedence, i.e. a parent
   will override a grandparent.
-* `:versions` - Similar -- but **much** simpler -- to Maven's
-  dependency management feature, versions for child module
-  dependencies, plugins, and parent vectors will be expanded from this
-  map. Symbols, e.g. `group-id/artifact-id`, from project dependency
-  vectors are mapped to version strings that will replace those in the
-  child project map. The map is recursively searched (values may be
-  keys in the same map) to find a matching version string, useful when
-  multiple dependencies share the same version. This allows you to
-  maintain the versions of your child modules' shared dependencies in
-  a single place. Just like with `:inherited`, the most immediate
-  ancestors take precedence.
-* `:dirs` - Normally, child modules are discovered by searching for
-  project.clj files beneath the project's `:root` with a proper
-  `:parent` reference, but this vector can override that behavior by
-  specifying exactly which directories contain child modules. This
-  vector is only required when your module hierarchy doesn't match
-  your directory hierarchy, e.g. when a parent module is in a sibling
-  directory. Regardless of this option, build order is always
-  determined by child module interdependence.
+* `:versions` - A mapping of dependency symbols to version strings. As
+  a simpler alternative to Maven's dependency management, versions for
+  child module dependencies, plugins, and parent vectors will be
+  expanded from this map. Symbols, e.g. `group-id/artifact-id`, from
+  project dependency vectors are mapped to version strings that will
+  replace those in the child project map. The map is recursively
+  searched (values may be keys in the same map) to find a matching
+  version string, useful when multiple dependencies share the same
+  version. This allows you to maintain the versions of your child
+  modules' shared dependencies in a single place. Just like with
+  `:inherited`, the most immediate ancestors take precedence.
+* `:dirs` - A vector of relative paths. Normally, child modules are
+  discovered by searching for project.clj files beneath the project's
+  `:root` with a proper `:parent` reference, but this vector can
+  override that behavior by specifying exactly which directories
+  contain child modules. This vector is only required when your module
+  hierarchy doesn't match your directory hierarchy, e.g. when a parent
+  module is in a sibling directory. Regardless of this option, build
+  order is always determined by child module interdependence.
 
 ## TODO
 
