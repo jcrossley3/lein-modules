@@ -6,7 +6,8 @@
 (defn parent
   "Return the parent map of the passed project"
   [project]
-  (when-let [path (-> project :parent prj/dependency-map :relative-path)]
+  (if-let [path (or (-> project :modules :parent)
+                  (-> project :parent prj/dependency-map :relative-path))]
     (prj/read (-> (.. (io/file (:root project) path)
                     getCanonicalFile
                     getParentFile)
