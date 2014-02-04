@@ -23,7 +23,7 @@
     (loop [k (id vmap)]
       (if (contains? vmap k)
         (recur (k vmap))
-        (apply vector id (or k ver) opts)))))
+        (apply vector id (or k (vmap ver) ver) opts)))))
 
 (defn versionize
   "Substitute versions in dependency vectors with actual versions from
