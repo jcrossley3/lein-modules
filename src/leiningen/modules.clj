@@ -45,15 +45,16 @@
 (defn progeny
   "Recursively return the project's children"
   [project]
-  (let [childs (children project)]
-    (if (empty? childs)
-      childs
-      (mapcat #(cons % (progeny %)) childs))))
+  (let [children (children project)]
+    (if (empty? children)
+      [project]
+      (cons project (mapcat progeny children)))))
 
 (defn id
   "Returns fully-qualified symbol identifier for project"
   [project]
-  (symbol (:group project) (:name project)))
+  (if project
+    (symbol (:group project) (:name project))))
 
 (defn topological-sort [deps]
   "A topological sort of a mapping of graph nodes to their edges (credit Jon Harrop)"
@@ -67,7 +68,7 @@
 (defn interdependents
   "Return a project's dependency symbols in common with targets"
   [project targets]
-  (->> (cons (:parent project) (:dependencies project))
+  (->> (cons [(id (parent project))] (:dependencies project))
     (map first)
     (filter (set targets))))
 
@@ -81,7 +82,7 @@
                (fn [acc p] (assoc acc (id p) (interdependents p tgts)))
                {}
                (vals all))]
-    (cons project (map all (topological-sort deps)))))
+    (map all (topological-sort deps))))
 
 (defn modules
   "Run a task in all related projects in dependent order"
@@ -92,9 +93,9 @@
     (doseq [p modules]
       (println "  " (:name p)))
     (doseq [project modules]
+      (println "------------------------------------------------------------------------")
+      (println " Building" (:name project) (:version project))
+      (println "------------------------------------------------------------------------")
       (let [project (prj/init-project project)
             task (main/lookup-alias task project)]
-        (println "------------------------------------------------------------------------")
-        (println " Building" (:name project) (:version project))
-        (println "------------------------------------------------------------------------")
         (main/apply-task task project args)))))
