@@ -15,7 +15,7 @@
                 str))))
 
 (def config
-  "Traverse all parents to accumulate a list of plugin config,
+  "Traverse all parents to accumulate a list of :modules config,
   ordered by least to most immediate ancestors"
   (memoize
     (fn [project]

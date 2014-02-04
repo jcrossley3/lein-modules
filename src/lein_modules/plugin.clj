@@ -33,7 +33,6 @@
         f #(for [d %] (expand-version d vmap))]
     (-> project
       (update-in [:dependencies] f)
-      (update-in [:plugins] f)          ; chicken or egg?
       (update-in [:parent] expand-version vmap))))
 
 (defn inherited-profiles
