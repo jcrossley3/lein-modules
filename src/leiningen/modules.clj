@@ -16,13 +16,17 @@
 
 (def config
   "Traverse all parents to accumulate a list of :modules config,
-  ordered by least to most immediate ancestors"
+  ordered by least to most immediate ancestors. Each config map has
+  its associated project attached as metadata"
   (memoize
     (fn [project]
       (loop [p project, acc '()]
         (if (nil? p)
           (remove nil? acc)
-          (recur (parent p) (conj acc (-> p :modules))))))))
+          (recur (parent p)
+            (conj acc
+              (if-let [c (-> p :modules)]
+                (with-meta c {:project p})))))))))
 
 (defn child?
   "Return true if child is an immediate descendant of project"

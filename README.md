@@ -48,7 +48,10 @@ which may contain the following keys:
 * `:inherited` - This is effectively a Leiningen profile. The implicit
   plugin middleware will merge the `:inherited` maps from all its
   ancestors, with the most immediate taking precedence, i.e. a parent
-  will override a grandparent.
+  will override a grandparent. In addition, any profile maps found in
+  parents will be merged if those profiles are active for the child.
+  You may include a `:profiles` vector of keywords in `:inherited` to
+  restrict which profiles are merged.
 * `:versions` - A mapping of dependency symbols to version strings. As
   a simpler alternative to Maven's dependency management, versions for
   child module dependencies and parent vectors will be expanded from
@@ -78,15 +81,19 @@ Hopefully, a configuration example will clarify the above:
   :plugins [[lein-modules "0.1.0-SNAPSHOT"]]
   :packaging "pom"
 
-  :modules  {:inherited
+  :profiles {:provided
                {:dependencies [[org.clojure/clojure _]
-                               [org.jboss.as/jboss-as-server _]]
-                :repositories [["project:odd upstream"
+                               [org.jboss.as/jboss-as-server _]]}
+             :dev
+               {:dependencies [[midje "1.6.0"]]}}
+
+  :modules  {:inherited
+               {:repositories [["project:odd upstream"
                                 "http://repository-projectodd.forge.cloudbees.com/upstream"]]
-                :source-paths       ^:replace ["src/main/clojure"]
-                :test-paths         ^:replace ["src/test/clojure"]
-                :java-source-paths  ^:replace ["src/main/java"]
-                :aliases            ^:replace {"all" ["do" "clean," "test," "install"]}}
+                :source-paths       ["src/main/clojure"]
+                :test-paths         ["src/test/clojure"]
+                :java-source-paths  ["src/main/java"]
+                :aliases ^:displace {"all" ["do" "clean," "test," "install"]}}
   
              :versions {org.clojure/clojure           "1.5.1"
                         leiningen-core/leiningen-core "2.3.4"
@@ -103,19 +110,6 @@ Hopefully, a configuration example will clarify the above:
 
              :dirs ["messaging" "../web"]})
 ```
-
-## TODO
-
-* Add an optional `:profiles` key in `:inherited` that indicates which
-  parent profiles should be merged when the same profile is active in
-  the child. Note `:profiles` and `:active-profiles` on project's
-  metadata and expand any composite keys
-* Consider replacing auto-versionization with a plugin subtask that
-  spits out actual project.clj files for child modules, using the
-  version strings from the `:versions` map. We'd want to preserve
-  formatting and comments and probably leave `:profiles` alone. That
-  could make straight regex replacement tricky.
-
 
 ## License
 

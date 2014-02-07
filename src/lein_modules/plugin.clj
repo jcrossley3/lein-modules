@@ -18,6 +18,9 @@
   (->> (config project) (map :versions) (apply merge {})))
 
 (defn expand-version
+  "Recursively search for a version string in the vmap using the first
+  field of the dependency vector. If not found, use the dependency's
+  version as a key, and if that's not found, just return the version."
   [d vmap]
   (if-let [[id ver & opts] d]
     (loop [k (id vmap)]
@@ -35,10 +38,45 @@
       (update-in [:dependencies] f)
       (update-in [:parent] expand-version vmap))))
 
-(defn inherited-profiles
-  "Extract a list of :inherited profiles from the modules config"
+(defn active-profiles
+  "Return the active profile keywords in effect for a given project
+   (TODO: use prj/expand-profile)"
   [project]
-  (remove nil? (->> (config project) (map :inherited))))
+  (distinct
+    (loop [[p & r] (-> project meta :active-profiles), result []]
+      (if (nil? p)
+        result
+        (let [profile (p (:profiles project) (@prj/default-profiles p))]
+          (if (prj/composite-profile? profile)
+            (recur (concat profile r) result)
+            (recur r (conj result p))))))))
+
+(defn allowed-profiles
+  "Given a list of actives and list of allowed, return the intersection in 'actives order'"
+  [actives allowed]
+  (if (nil? allowed)
+    actives
+    (filter (set allowed) actives)))
+
+(defn expand-profiles
+  "Given a list of active profile keywords and a :modules config map,
+  return the :inherited profile along with any active profiles from
+  the associated project"
+  [actives config]
+  (let [inherited (:inherited config)]
+    (cons inherited
+      (map #(% (-> config meta :project :profiles))
+        (allowed-profiles actives (:profiles inherited))))))
+
+(defn inherited-profiles
+  "Extract a list of :inherited profiles from the modules config, as
+  well as any active profiles from parents containing a :modules
+  entry"
+  [project]
+  (->> (config project)
+    (mapcat (partial expand-profiles (active-profiles project)))
+    (remove nil?)
+    (map #(dissoc % :profiles))))
 
 (defn inherit
   "Apply :inherited profiles from parents, where a parent profile
