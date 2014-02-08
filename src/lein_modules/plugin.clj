@@ -2,15 +2,6 @@
   (:use [leiningen.modules :only (config)])
   (:require [leiningen.core.project :as prj]))
 
-;;; A hack to prevent recursive middleware calls
-;;; https://github.com/technomancy/leiningen/issues/1151
-(def ^:dynamic *merging* nil)
-(defmacro unless-merging [default & body]
-  `(if *merging*
-     ~default
-     (binding [*merging* true]
-       ~@body)))
-
 (defn versions
   "Merge dependency management maps of :versions from the
   modules config"
@@ -80,10 +71,15 @@
 
 (defn inherit
   "Apply :inherited profiles from parents, where a parent profile
-  overrides a grandparent"
+  overrides a grandparent, guarding recursive middleware calls with a
+  metadata flag.
+  See https://github.com/technomancy/leiningen/issues/1151"
   [project]
-  (unless-merging project
-    (prj/merge-profiles project (inherited-profiles project))))
+  (if (-> project meta :modules-inherited)
+    project
+    (prj/merge-profiles
+      (vary-meta project assoc :modules-inherited true)
+      (inherited-profiles project))))
 
 (defn middleware
   "Implicit Leiningen middleware"
