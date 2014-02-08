@@ -36,3 +36,18 @@
   (is (not (identical? project (middleware project))))
   (let [uncle (prj/read "test-resources/grandparent/uncle/project.clj")]
     (is (identical? uncle (middleware uncle)))))
+
+(deftest compositization
+  (let [pp {:name "pp"}
+        p {:name "p"
+           :modules {:parent pp}
+           :profiles {:test {:a 1}}}
+        c {:name "c"
+           :modules {:parent p}
+           :profiles {:test {:a 2}}}]
+    (is nil? (compositize-profiles nil))
+    (is nil? (compositize-profiles pp))
+    (is (= {:test [:test-p] :test-p {:a 1}}
+          (compositize-profiles p)))
+    (is (= {:test [:test-p :test-c] :test-p {:a 1} :test-c {:a 2}}
+          (compositize-profiles c)))))

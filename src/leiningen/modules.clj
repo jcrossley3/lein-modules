@@ -4,29 +4,27 @@
             [clojure.java.io :as io]))
 
 (defn parent
-  "Return the parent map of the passed project"
+  "Return the project's parent project"
   [project]
-  (if-let [path (or (-> project :modules :parent)
-                  (-> project :parent prj/dependency-map :relative-path))]
-    (prj/read (-> (.. (io/file (:root project) path)
-                    getCanonicalFile
-                    getParentFile)
-                (io/file "project.clj")
-                str))))
+  (let [p (-> project :modules :parent)]
+    (if (map? p) ; handy for testing
+      p
+      (if-let [path (or p (-> project :parent prj/dependency-map :relative-path))]
+        (prj/read (-> (.. (io/file (:root project) path)
+                        getCanonicalFile
+                        getParentFile)
+                    (io/file "project.clj")
+                    str))))))
 
-(def config
+(defn config
   "Traverse all parents to accumulate a list of :modules config,
   ordered by least to most immediate ancestors. Each config map has
   its associated project attached as metadata"
-  (memoize
-    (fn [project]
-      (loop [p project, acc '()]
-        (if (nil? p)
-          (remove nil? acc)
-          (recur (parent p)
-            (conj acc
-              (if-let [c (-> p :modules)]
-                (with-meta c {:project p})))))))))
+  [project]
+  (loop [p project, acc '()]
+    (if (nil? p)
+      (remove nil? acc)
+      (recur (parent p) (conj acc (-> p :modules))))))
 
 (defn child?
   "Return true if child is an immediate descendant of project"

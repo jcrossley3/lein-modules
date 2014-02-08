@@ -1,5 +1,5 @@
 (ns lein-modules.plugin
-  (:use [leiningen.modules :only (config)])
+  (:use [leiningen.modules :only (config parent)])
   (:require [leiningen.core.project :as prj]))
 
 (defn versions
@@ -29,43 +29,31 @@
       (update-in [:dependencies] f)
       (update-in [:parent] expand-version vmap))))
 
-(defn active-profiles
-  "Return the active profile keywords in effect for a given project
-   (TODO: use prj/expand-profile)"
+(defn compositor
+  "Returns a reducing function that turns a profile into a composite,
+  e.g. {:test {:a 1}} becomes {:test [:test-foo] :test-foo {:a 1}} for
+  a project named 'foo'"
   [project]
-  (distinct
-    (loop [[p & r] (-> project meta :active-profiles), result []]
-      (if (nil? p)
-        result
-        (let [profile (p (:profiles project) (@prj/default-profiles p))]
-          (if (prj/composite-profile? profile)
-            (recur (concat profile r) result)
-            (recur r (conj result p))))))))
+  (fn [m [k v]]
+    (let [n (keyword (format "%s-%s" (name k) (:name project)))]
+      (assoc (update-in m [k] #(vec (cons n %))) n v))))
 
-(defn allowed-profiles
-  "Given a list of actives and list of allowed, return the intersection in 'actives order'"
-  [actives allowed]
-  (if (nil? allowed)
-    actives
-    (filter (set allowed) actives)))
-
-(defn expand-profiles
-  "Given a list of active profile keywords and a :modules config map,
-  return the :inherited profile along with any active profiles from
-  the associated project"
-  [actives config]
-  (let [inherited (:inherited config)]
-    (cons inherited
-      (map #(% (-> config meta :project :profiles))
-        (allowed-profiles actives (:profiles inherited))))))
+(defn compositize-profiles
+  "Return a profile map containing all the profiles found in the
+  project and its ancestors, resulting in standard profiles,
+  e.g. :test and :dev, becoming composite"
+  [project]
+  (loop [p project, result nil]
+    (if (nil? p)
+      result
+      (recur (parent p) (reduce (compositor p) result (:profiles p))))))
 
 (defn inherited-profiles
-  "Extract a list of :inherited profiles from the modules config, as
-  well as any active profiles from parents containing a :modules
-  entry"
+  "Return a list of :inherited profiles from the modules config of the
+  project and its ancestors"
   [project]
   (->> (config project)
-    (mapcat (partial expand-profiles (active-profiles project)))
+    (map :inherited)
     (remove nil?)
     (map #(dissoc % :profiles))))
 
@@ -77,9 +65,11 @@
   [project]
   (if (-> project meta :modules-inherited)
     project
-    (prj/merge-profiles
-      (vary-meta project assoc :modules-inherited true)
-      (inherited-profiles project))))
+    (let [cps (compositize-profiles project)]
+      (-> (prj/add-profiles project cps)
+        (vary-meta assoc :modules-inherited true)
+        (vary-meta update-in [:profiles] merge cps)
+        (prj/merge-profiles (inherited-profiles project))))))
 
 (defn middleware
   "Implicit Leiningen middleware"
