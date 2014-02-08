@@ -31,7 +31,7 @@ From a parent module, use the `modules` higher-order task to build its
 
     $ lein modules clean
     $ lein modules test
-    $ lein modules jar
+    $ lein modules do clean, jar
     $ lein modules analias
 
 From a child module, just use `lein` as you normally would, relying on
@@ -48,10 +48,9 @@ which may contain the following keys:
 * `:inherited` - This is effectively a Leiningen profile. The implicit
   plugin middleware will merge the `:inherited` maps from all its
   ancestors, with the most immediate taking precedence, i.e. a parent
-  will override a grandparent. In addition, any profile maps found in
-  parents will be merged if those profiles are active for the child.
-  You may include a `:profiles` vector of keywords in `:inherited` to
-  restrict which profiles are merged.
+  will override a grandparent. In addition, any profile maps matching
+  standard Leiningen profiles (:dev, :test, etc) in the project's
+  ancestors will be [un]merged as appropriate for the task at hand.
 * `:versions` - A mapping of dependency symbols to version strings. As
   a simpler alternative to Maven's dependency management, versions for
   child module dependencies and parent vectors will be expanded from
