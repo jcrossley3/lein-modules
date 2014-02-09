@@ -14,14 +14,14 @@ dependency management mechanism.
 
 ## Installation
 
-Put `[lein-modules "0.1.0-SNAPSHOT"]` into the `:plugins` vector of
+Put `[lein-modules "0.1.0"]` into the `:plugins` vector of
 your `:user` profile.
 
 Installed globally, the plugin will only affect those projects that
 include a `:modules` map in their project.clj.
 
 Still, if you'd rather not install it globally, put
-`[lein-modules "0.1.0-SNAPSHOT"]` into the `:plugins` vector of every
+`[lein-modules "0.1.0"]` into the `:plugins` vector of every
 associated module's project.clj.
 
 ## Usage
@@ -77,7 +77,7 @@ Hopefully, a configuration example will clarify the above:
 
 ```clj
 (defproject org.immutant/immutant-modules-parent "1.0.3-SNAPSHOT"
-  :plugins [[lein-modules "0.1.0-SNAPSHOT"]]
+  :plugins [[lein-modules "0.1.0"]]
   :packaging "pom"
 
   :profiles {:provided
