@@ -76,7 +76,14 @@ any of the following keys:
 
 ## Example
 
-Hopefully, a configuration example will clarify the above:
+Hopefully, an example will clarify the above.
+
+Note the underscores in the dependency vectors, which serve as a
+placeholder for the string returned from the `:versions` map. Whatever
+you set the version to in your dependency vector will be overwritten
+if a version is found in `:versions`. Otherwise, whatever is there
+will remain there. And if a mapping for the symbol can't be found, the
+version itself will be tried as a key.
 
 ```clj
 (defproject org.immutant/immutant-modules-parent "1.0.3-SNAPSHOT"
@@ -85,9 +92,11 @@ Hopefully, a configuration example will clarify the above:
 
   :profiles {:provided
                {:dependencies [[org.clojure/clojure _]
-                               [org.jboss.as/jboss-as-server _]]}
+                               [org.jboss.as/jboss-as-server _]
+                               [org.jboss.as/jboss-as-web :jbossas]]}
              :dev
-               {:dependencies [[midje "1.6.0"]]}}
+               {:dependencies [[midje _]
+                               [ring/ring-devel "1.2.1"]]}}
 
   :modules  {:inherited
                {:repositories [["project:odd upstream"
@@ -99,6 +108,7 @@ Hopefully, a configuration example will clarify the above:
   
              :versions {org.clojure/clojure           "1.5.1"
                         leiningen-core/leiningen-core "2.3.4"
+                        midje/midje                   "1.6.0"
 
                         :immutant                     "1.0.3-SNAPSHOT"
                         :jbossas                      "7.2.x.slim.incremental.12"
