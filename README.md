@@ -12,6 +12,8 @@ Features include the building of child projects in dependency order,
 flexible project inheritance based on Leiningen profiles, and a simple
 dependency management mechanism.
 
+It has never been tested with any Leiningen version older than 2.3.4.
+
 ## Installation
 
 Put `[lein-modules "0.1.0"]` into the `:plugins` vector of
@@ -86,7 +88,7 @@ will remain there. And if a mapping for the symbol can't be found, the
 version itself will be tried as a key.
 
 ```clj
-(defproject org.immutant/immutant-modules-parent "1.0.3-SNAPSHOT"
+(defproject org.immutant/immutant-parent "1.0.3-SNAPSHOT"
   :plugins [[lein-modules "0.1.0"]]
   :packaging "pom"
 
@@ -113,12 +115,12 @@ version itself will be tried as a key.
                         :immutant                     "1.0.3-SNAPSHOT"
                         :jbossas                      "7.2.x.slim.incremental.12"
 
-                        org.immutant/immutant-modules-parent :immutant
-                        org.immutant/immutant-core-module    :immutant
-                        org.immutant/immutant-common-module  :immutant
+                        org.immutant/immutant-parent  :immutant
+                        org.immutant/immutant-core    :immutant
+                        org.immutant/immutant-common  :immutant
 
-                        org.jboss.as/jboss-as-server         :jbossas
-                        org.jboss.as/jboss-as-jmx            :jbossas}
+                        org.jboss.as/jboss-as-server  :jbossas
+                        org.jboss.as/jboss-as-jmx     :jbossas}
 
              :dirs ["messaging" "../web"]})
 ```
