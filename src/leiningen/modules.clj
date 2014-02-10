@@ -18,8 +18,7 @@
 
 (defn config
   "Traverse all parents to accumulate a list of :modules config,
-  ordered by least to most immediate ancestors. Each config map has
-  its associated project attached as metadata"
+  ordered by least to most immediate ancestors"
   [project]
   (loop [p project, acc '()]
     (if (nil? p)
@@ -60,7 +59,7 @@
 
 (defn topological-sort [deps]
   "A topological sort of a mapping of graph nodes to their edges (credit Jon Harrop)"
-  (loop [deps deps resolved #{} result []]
+  (loop [deps deps, resolved #{}, result []]
     (if (empty? deps)
       result
       (if-let [dep (some (fn [[k v]] (if (empty? (remove resolved v)) k)) deps)]
