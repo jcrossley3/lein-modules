@@ -17,10 +17,10 @@ dependency management mechanism.
 Put `[lein-modules "0.1.0"]` into the `:plugins` vector of
 your `:user` profile.
 
-Installed globally, the plugin will only affect those projects that
-include a `:modules` map in their project.clj.
+Installed globally, the plugin's implicit middleware will only affect
+those projects that include a `:modules` map in their project.clj.
 
-Still, if you'd rather not install it globally, put
+But if you'd rather not install it globally, put
 `[lein-modules "0.1.0"]` into the `:plugins` vector of every
 associated module's project.clj.
 
@@ -35,33 +35,36 @@ From a parent module, use the `modules` higher-order task to build its
     $ lein modules analias
 
 From a child module, just use `lein` as you normally would, relying on
-the plugin's implicit middleware to 1) merge `:inherited` profiles,
-and 2) update the child's project map from its ancestors' `:versions`
+the plugin's implicit middleware to 1) merge inherited profiles, and
+2) update the child's project map from its ancestors' `:versions`
 maps, both of which are described in the next section.
 
 ## Configuration
 
-This plugin relies on two keys in your project map: `:parent`,
-specifically its `:relative-path` attribute, and `:modules`, a map
-which may contain the following keys:
+For the `modules` task to discover child projects automatically, the
+`:relative-path` should be set in the `:parent` vector of each child.
+
+Optionally, a `:modules` map may be added to your project, containing
+any of the following keys:
 
 * `:inherited` - This is effectively a Leiningen profile. The implicit
   plugin middleware will merge the `:inherited` maps from all its
   ancestors, with the most immediate taking precedence, i.e. a parent
-  will override a grandparent. In addition, any profile maps matching
-  standard Leiningen profiles (:dev, :test, etc) in the project's
-  ancestors will be [un]merged as appropriate for the task at hand.
+  will override a grandparent. These `:inherited` profiles are applied
+  before any profile maps found in the project's ancestors, which will
+  of course be [un]merged as appropriate for the task at hand.
 * `:versions` - A mapping of dependency symbols to version strings. As
   a simpler alternative to Maven's dependency management, versions for
   child module dependencies and parent vectors will be expanded from
-  this map. Symbols, e.g. `group-id/artifact-id`, from project
-  dependency vectors are mapped to version strings that will replace
-  those in the child project map. The map is recursively searched
-  (values may be keys in the same map) to find a matching version
-  string, useful when multiple dependencies share the same version.
-  This allows you to maintain the versions of your child modules'
-  shared dependencies in a single place. Just like with `:inherited`,
-  the most immediate ancestors take precedence.
+  this map. Fully-qualified symbols, e.g. `group-id/artifact-id`, from
+  project dependency vectors are mapped to version strings that will
+  replace those in the child project map. The map is searched
+  recursively (values may be keys in the same map) to find a matching
+  version string, useful when multiple dependencies share the same
+  version. This allows you to maintain the versions of your child
+  modules' shared dependencies in a single place. And like the
+  `:inherited` profile, when multiple `:versions` maps are found among
+  ancestors, the most immediate take precedence.
 * `:dirs` - A vector of relative paths. Normally, child modules are
   discovered by searching for project.clj files beneath the project's
   `:root` with a proper `:parent` reference, but this vector can
