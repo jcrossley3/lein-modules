@@ -51,3 +51,15 @@
           (compositize-profiles p)))
     (is (= {:test [:test-p :test-c] :test-p {:a 1} :test-c {:a 2}}
           (compositize-profiles c)))))
+
+(deftest profile-application
+  (let [child (inherit project)
+        base (prj/unmerge-profiles child [:default])]
+    (is (= [:inherited] (distinct (:foo base))))
+    (is (= [:inherited :dev] (distinct (:foo (prj/merge-profiles base [:dev])))))
+    (is (= [:inherited :provided] (distinct (:foo (prj/merge-profiles base [:provided])))))
+    (is (= [:inherited :provided :dev] (distinct (:foo (prj/merge-profiles base [:default]))))))
+  (let [top (inherit (prj/read "test-resources/grandparent/project.clj"))
+        base (prj/unmerge-profiles top [:default])]
+    (is (= [:root :inherited] (distinct (:foo base))))
+    (is (= [:root :inherited :provided :dev] (distinct (:foo (prj/merge-profiles base [:default])))))))
