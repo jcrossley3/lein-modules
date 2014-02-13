@@ -54,8 +54,7 @@
   [project]
   (->> (config project)
     (map :inherited)
-    (remove nil?)
-    (map #(dissoc % :profiles))))
+    (remove nil?)))
 
 (defn reset-without-profiles
   [project]
