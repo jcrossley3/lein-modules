@@ -6,6 +6,11 @@
   (:require [leiningen.core.project :as prj]
             [clojure.java.io        :as io]))
 
+(defn rootset
+  "Avoid testing all attributes of a project, just the :root"
+  [coll]
+  (->> coll (map :root) set))
+
 (deftest parent-project-has-correct-root
   (let [project (prj/read "test-resources/grandparent/parent/child/project.clj")
         parent (parent project)
@@ -26,7 +31,7 @@
     (is (not (child? grandpa uncle)))
     (is (not (child? uncle ann)))
     (is (empty? (children ann)))
-    (is (= #{ann nancy} (set (children flip))))
-    (is (= #{ann nancy} (set (children fiona))))
-    (is (= [flip] (children grandpa)))
-    (is (= #{grandpa flip ann nancy} (set (progeny grandpa))))))
+    (is (= (rootset [ann nancy]) (rootset (children flip))))
+    (is (= (rootset [ann nancy]) (rootset (children fiona))))
+    (is (= (rootset [flip]) (rootset (children grandpa))))
+    (is (= (rootset [grandpa flip ann nancy]) (rootset (progeny grandpa))))))
