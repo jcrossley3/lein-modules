@@ -1,6 +1,8 @@
 (ns leiningen.modules-test
   (:use clojure.test
-        leiningen.modules)
+        leiningen.modules
+        [lein-modules.common :only (parent)]
+        [lein-modules.inheritance :only (inherit)])
   (:require [leiningen.core.project :as prj]
             [clojure.java.io        :as io]))
 
