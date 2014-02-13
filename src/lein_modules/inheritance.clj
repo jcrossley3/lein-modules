@@ -29,10 +29,6 @@
     (map :inherited)
     (remove nil?)))
 
-(defn reset-without-profiles
-  [project]
-  (vary-meta project assoc :without-profiles project))
-
 (defn inherit
   "Apply :inherited profiles from parents, where a parent profile
   overrides a grandparent, guarding recursive middleware calls with a
@@ -45,7 +41,5 @@
       (-> (prj/add-profiles project compost)
         (vary-meta assoc :modules-inherited true)
         (vary-meta update-in [:profiles] merge compost)
-        (prj/unmerge-profiles [:default])
-        (prj/merge-profiles (inherited-profiles project))
-        (reset-without-profiles)
+        (prj/set-profiles (inherited-profiles project))
         (prj/merge-profiles [:default])))))
