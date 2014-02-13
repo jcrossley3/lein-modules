@@ -30,18 +30,39 @@
   [project child]
   (= (:root project) (:root (parent child))))
 
+(defn unexpand-profiles
+  "Compress a list of active profile symbols into their composite representaions"
+  [actives profiles]
+  (if (= [:default] actives)
+    actives
+    (->> profiles
+      (filter (fn [[k v]] (prj/composite-profile? v)))
+      (map first)
+      (filter #(let [p (profiles %)] (= p (filter (set p) actives)))))))
+
+(defn read-child
+  "Read a project with the same profiles active as the parent"
+  [parent file]
+  (let [actives (-> parent meta :active-profiles distinct)
+        profiles (-> parent meta :profiles (dissoc :default))
+        unexpanded (unexpand-profiles actives profiles)]
+    (println "DEBUG: prj/read" file unexpanded)
+    (prj/read file unexpanded)))
+
 (defn children
   "Return the child modules for a project"
   [project]
-  (if-let [dirs (-> project :modules :dirs)]
-    (map (comp prj/read
-           (memfn getCanonicalPath)
-           #(io/file (:root project) % "project.clj"))
-      dirs)
-    (->> (file-seq (io/file (:root project))) 
-      (filter #(= "project.clj" (.getName %)))
-      (map (comp prj/read str))
-      (filter (partial child? project)))))
+  (let [reader (partial read-child project)]
+    (if-let [dirs (-> project :modules :dirs)]
+      (map (comp reader
+             (memfn getCanonicalPath)
+             #(io/file (:root project) % "project.clj"))
+        dirs)
+      (->> (file-seq (io/file (:root project))) 
+        (filter #(= "project.clj" (.getName %)))
+        (remove #(= (:root project) (.getParent %)))
+        (map (comp reader str))
+        (filter (partial child? project))))))
 
 (defn progeny
   "Recursively return the project's children"
