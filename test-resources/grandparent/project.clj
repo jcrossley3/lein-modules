@@ -10,4 +10,5 @@
                        parent      :ver}}
   :foo [:root]
   :profiles {:dev {:foo [:dev]}
-             :provided {:foo [:provided]}})
+             :provided {:foo [:provided]}
+             :dist {:foo [:dist]}})

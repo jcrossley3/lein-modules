@@ -19,20 +19,14 @@
   (loop [p project, result nil]
     (if (nil? p)
       result
-      (recur (parent p) (reduce (compositor p) result (:profiles p))))))
-
-(defn inherited-profiles
-  "Return a list of :inherited profiles from the modules config of the
-  project and its ancestors"
-  [project]
-  (->> (config project)
-    (map :inherited)
-    (remove nil?)))
+      (recur (parent p) (reduce (compositor p) result
+                          (conj (select-keys (:modules p) [:inherited])
+                            (:profiles p)))))))
 
 (defn inherit
-  "Apply :inherited profiles from parents, where a parent profile
-  overrides a grandparent, guarding recursive middleware calls with a
-  metadata flag.
+  "Add profiles from parents, setting any :inherited ones if found,
+  where a parent profile overrides a grandparent, guarding recursive
+  middleware calls with a metadata flag.
   See https://github.com/technomancy/leiningen/issues/1151"
   [project]
   (if (-> project meta :modules-inherited)
@@ -41,5 +35,4 @@
       (-> (prj/add-profiles project compost)
         (vary-meta assoc :modules-inherited true)
         (vary-meta update-in [:profiles] merge compost)
-        (prj/set-profiles (inherited-profiles project))
-        (prj/merge-profiles [:default])))))
+        (prj/set-profiles [(if (:inherited compost) :inherited {}) :default])))))

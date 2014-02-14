@@ -15,9 +15,9 @@
     (is (true? (-> (inherit project) :omit-source)))))
 
 (deftest ancestors-sort-oldest-to-youngest
-  (let [[grandpa dad] (inherited-profiles project)]
-    (is (false? (:omit-source grandpa)))
-    (is (true? (:omit-source dad)))))
+  (let [m (compositize-profiles project)]
+    (is (false? (-> m :inherited-grandparent :omit-source)))
+    (is (true? (-> m :inherited-parent :omit-source)))))
 
 (deftest paths-resolved-for-child
   (is (nil? (:java-source-paths project)))
@@ -38,14 +38,16 @@
     (is (= {:test [:test-p :test-c] :test-p {:a 1} :test-c {:a 2}}
           (compositize-profiles c)))))
 
-(deftest profile-application
-  (let [child (inherit project)
-        base (prj/unmerge-profiles child [:default])]
-    (is (= [:inherited] (:foo base)))
-    (is (= [:inherited :dev] (:foo (prj/merge-profiles base [:dev]))))
-    (is (= [:inherited :provided] (:foo (prj/merge-profiles base [:provided]))))
-    (is (= [:inherited :provided :dev] (:foo (prj/merge-profiles base [:default])))))
-  (let [top (inherit (prj/read "test-resources/grandparent/project.clj"))
-        base (prj/unmerge-profiles top [:default])]
-    (is (= [:root :inherited] (:foo base)))
-    (is (= [:root :inherited :provided :dev] (:foo (prj/merge-profiles base [:default]))))))
+(deftest profile-application-child
+  (let [p (inherit project)]
+    (is (= [:inherited :provided :dev] (:foo p)))
+    (is (= [:inherited :provided :dev :dist] (:foo (prj/merge-profiles p [:dist]))))
+    (is (= [:inherited :provided :dev :dist] (:foo (prj/set-profiles p [:inherited :default :dist]))))
+    (is (= [:inherited :dist] (:foo (-> p (prj/unmerge-profiles [:default]) (prj/merge-profiles [:dist])))))))
+
+(deftest profile-application-base
+  (let [p (inherit (prj/read "test-resources/grandparent/project.clj"))]
+    (is (= [:root :inherited :provided :dev] (:foo p)))
+    (is (= [:root :inherited :provided :dev :dist] (:foo (prj/merge-profiles p [:dist]))))
+    (is (= [:root :inherited :provided :dev :dist] (:foo (prj/set-profiles p [:inherited :default :dist]))))
+    (is (= [:root :inherited :dist] (:foo (-> p (prj/unmerge-profiles [:default]) (prj/merge-profiles [:dist])))))))
