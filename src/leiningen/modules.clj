@@ -3,7 +3,8 @@
             [leiningen.core.main :as main]
             [clojure.java.io :as io])
   (:use [lein-modules.inheritance :only (inherit)]
-        [lein-modules.common      :only (parent)]))
+        [lein-modules.common      :only (parent)]
+        [lein-modules.compression :only (compress)]))
 
 (defn child?
   "Return true if child is an immediate descendant of project"
@@ -13,8 +14,11 @@
 (defn profilize
   "Activate the same profiles in the child that are active in the parent"
   [parent child]
-  (let [actives (-> parent meta :active-profiles distinct)]
-    (prj/set-profiles (inherit child) actives)))
+  (let [actives (-> parent meta :active-profiles distinct)
+        profiles (-> parent meta :profiles)
+        targets (compress actives profiles)]
+    (println "DEBUG:" targets (:name child))
+    (prj/set-profiles (inherit child) targets)))
 
 (defn children
   "Return the child modules for a project"
