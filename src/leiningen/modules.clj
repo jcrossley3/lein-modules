@@ -17,7 +17,6 @@
   (let [actives (-> parent meta :active-profiles distinct)
         profiles (-> parent meta :profiles)
         targets (compress actives profiles)]
-    (println "DEBUG:" targets (:name child))
     (prj/set-profiles (inherit child) targets)))
 
 (defn children
