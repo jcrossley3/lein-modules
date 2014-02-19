@@ -58,11 +58,12 @@ any of the following keys:
   applied before the `:default` profiles, but you can override this
   behavior by not creating any `:inherited` profiles and setting
   `:default` to be a composite of whatever profiles make sense for
-  your project, most likely just the standard ones. This bears
-  repeating: project inheritance occurs whether you define an
-  `:inherited` profile or not, because any standard profiles, e.g.
-  `:dev` or `:provided`, from ancestors are merged in automatically.
-  Therefore, they are [un]merged as appropriate for the task at hand.
+  your project, including the default ones. This bears repeating:
+  profile inheritance occurs whether you define an `:inherited`
+  profile or not, because **all** profile maps from ancestors, e.g.
+  `:dev`, `:provided`, `:production` or `:whatever`, are automatically
+  added to the child. Therefore, they are [un]merged as appropriate
+  for the task at hand.
 * `:versions` - A mapping of dependency symbols to version strings. As
   a simpler alternative to Maven's dependency management, versions for
   child module dependencies and parent vectors will be expanded from
