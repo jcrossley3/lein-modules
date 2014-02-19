@@ -6,7 +6,8 @@
 
 (def ^:private expansions
   "Returns a sequence of pairs where the first is the expansion of the
-  second, which is a key in profiles, ordered by largest expansion"
+  second, which is a key to a composite profile, ordered by largest
+  expansion"
   (memoize
     (fn [profiles]
       (->> profiles
@@ -19,25 +20,33 @@
                    :else (recur t, (conj r h))))))
         (sort-by (comp - count first))))))
 
-(defn- replace-subvec
-  "Replace a sub-sequence within a vector with something else"
-  [vect sub with]
-  (vec (loop [v vect, result []]
-         (cond
-           (< (count v) (count sub))
-           (concat result v)
+(defn- iterator
+  "Generate sliding windows (the middle) of same-size sequences"
+  [coll size]
+  (iterate (fn [[left middle right]]
+             [(concat left (take 1 middle))
+              (concat (drop 1 middle) (take 1 right))
+              (drop 1 right)])
+    [[] (take size coll) (drop size coll)]))
 
-           (= sub (subvec v 0 (count sub)))
-           (recur (subvec v (count sub)) (conj result with))
-
-           :else (recur (subvec v 1) (conj result (first v)))))))
+(defn- substitute
+  "If found, replace a sub-sequence of a collection with v"
+  [coll sub v]
+  (let [size (count sub)
+        [left _ right] (->> (iterator coll size)
+                         (take-while (comp (partial = size) count second))
+                         (filter (fn [[_ s]] (= sub s)))
+                         first)]
+    (if left
+      (concat left (cons v right))
+      coll)))
 
 (defn compress
   "Compresses expanded profiles into their associated composites"
-  [vect profiles]
+  [c profiles]
   (let [expands (expansions profiles)]
-    (loop [[[sub with] & r] expands, result (vec vect)]
+    (loop [[[sub with] & r] expands, result c]
       (if (empty? sub)
         result
-        (recur r (replace-subvec result sub with))))))
+        (recur r (substitute result sub with))))))
 
