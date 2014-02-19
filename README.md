@@ -49,12 +49,20 @@ For the `modules` task to discover child projects automatically, the
 Optionally, a `:modules` map may be added to your project, containing
 any of the following keys:
 
-* `:inherited` - This is effectively a Leiningen profile. The implicit
-  plugin middleware will merge the `:inherited` maps from all its
-  ancestors, with the most immediate taking precedence, i.e. a parent
-  will override a grandparent. These `:inherited` profiles are applied
-  before any profile maps found in the project's ancestors, which will
-  of course be [un]merged as appropriate for the task at hand.
+* `:inherited` - This is just a Leiningen profile. You could
+  alternatively put it in `:profiles` to emphasize that point. The
+  implicit plugin middleware will create composite profiles for all
+  the profile maps found among a project's ancestors, with the most
+  immediate taking precedence, i.e. a parent profile will be applied
+  after a grandparent. If found, the `:inherited` profiles will be
+  applied before the `:default` profiles, but you can override this
+  behavior by not creating any `:inherited` profiles and setting
+  `:default` to be a composite of whatever profiles make sense for
+  your project, most likely just the standard ones. This bears
+  repeating: project inheritance occurs whether you define an
+  `:inherited` profile or not, because any standard profiles, e.g.
+  `:dev` or `:provided`, from ancestors are merged in automatically.
+  Therefore, they are [un]merged as appropriate for the task at hand.
 * `:versions` - A mapping of dependency symbols to version strings. As
   a simpler alternative to Maven's dependency management, versions for
   child module dependencies and parent vectors will be expanded from
@@ -98,7 +106,9 @@ version itself will be tried as a key.
                                [org.jboss.as/jboss-as-web :jbossas]]}
              :dev
                {:dependencies [[midje _]
-                               [ring/ring-devel "1.2.1"]]}}
+                               [ring/ring-devel "1.2.1"]]}
+             :dist
+               {:modules {:dirs ["../dist"]}}}
 
   :modules  {:inherited
                {:repositories [["project:odd upstream"
@@ -120,9 +130,7 @@ version itself will be tried as a key.
                         org.immutant/immutant-common  :immutant
 
                         org.jboss.as/jboss-as-server  :jbossas
-                        org.jboss.as/jboss-as-jmx     :jbossas}
-
-             :dirs ["messaging" "../web"]})
+                        org.jboss.as/jboss-as-jmx     :jbossas}})
 ```
 
 ## License
