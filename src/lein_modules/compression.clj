@@ -20,25 +20,14 @@
                    :else (recur t, (conj r h))))))
         (sort-by (comp - count first))))))
 
-(defn- iterator
-  "Generate sliding windows (the middle) of same-size sequences"
-  [coll size]
-  (iterate (fn [[left middle right]]
-             [(concat left (take 1 middle))
-              (concat (drop 1 middle) (take 1 right))
-              (drop 1 right)])
-    [[] (take size coll) (drop size coll)]))
-
 (defn- substitute
   "If found, replace a sub-sequence of a collection with v"
   [coll sub v]
-  (let [size (count sub)
-        [left _ right] (->> (iterator coll size)
-                         (take-while (comp (partial = size) count second))
-                         (filter (fn [[_ s]] (= sub s)))
-                         first)]
-    (if left
-      (concat left (cons v right))
+  (let [size (count sub)]
+    (or
+      (first (for [i (range (count coll))
+                   :when (= sub (take size (drop i coll)))]
+               (concat (take i coll) (cons v (drop (+ size i) coll)))))
       coll)))
 
 (defn compress
