@@ -25,7 +25,7 @@
   [coll sub v]
   (let [size (count sub)]
     (or
-      (first (for [i (range (count coll))
+      (first (for [i (range (- (count coll) (dec size)))
                    :when (= sub (take size (drop i coll)))]
                (concat (take i coll) (cons v (drop (+ size i) coll)))))
       coll)))
