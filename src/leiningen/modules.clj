@@ -1,6 +1,7 @@
 (ns leiningen.modules
   (:require [leiningen.core.project :as prj]
             [leiningen.core.main :as main]
+            [leiningen.core.eval :as eval]
             [clojure.java.io :as io])
   (:use [lein-modules.inheritance :only (inherit)]
         [lein-modules.common      :only (parent)]
@@ -11,28 +12,27 @@
   [project child]
   (= (:root project) (:root (parent child))))
 
-(defn profilize
-  "Activate the same profiles in the child that are active in the parent"
-  [parent child]
-  (let [actives (-> parent meta :active-profiles distinct)
-        profiles (-> parent meta :profiles)
-        targets (compress actives profiles)]
-    (prj/set-profiles (inherit child) targets)))
+(defn compress-profiles
+  [project]
+  (compress
+    (-> project meta :included-profiles distinct)
+    (-> project meta :profiles)))
 
 (defn children
-  "Return the child modules for a project"
+  "Return the child maps for a project with the same active profiles"
   [project]
-  (map (partial profilize project)
-    (if-let [dirs (-> project :modules :dirs)]
-      (map (comp prj/read
-             (memfn getCanonicalPath)
-             #(io/file (:root project) % "project.clj"))
-        dirs)
-      (->> (file-seq (io/file (:root project))) 
-        (filter #(= "project.clj" (.getName %)))
-        (remove #(= (:root project) (.getParent %)))
-        (map (comp prj/read str))
-        (filter (partial child? project))))))
+  (let [profiles (compress-profiles project)]
+    (map #(prj/set-profiles (inherit %) profiles)
+      (if-let [dirs (-> project :modules :dirs)]
+        (map (comp prj/read
+               (memfn getCanonicalPath)
+               #(io/file (:root project) % "project.clj"))
+          dirs)
+        (->> (file-seq (io/file (:root project))) 
+          (filter #(= "project.clj" (.getName %)))
+          (remove #(= (:root project) (.getParent %)))
+          (map (comp prj/read str))
+          (filter (partial child? project)))))))
 
 (defn progeny
   "Recursively return the project's children"
@@ -76,18 +76,39 @@
                (vals all))]
     (map all (topological-sort deps))))
 
+(defn with-profiles
+  [profiles args]
+  (if (some #{"with-profile" "with-profiles"} args)
+    args
+    (with-meta (concat
+                 ["with-profile" (->> profiles
+                                   (map name)
+                                   (interpose ",")
+                                   (apply str))]
+                 args)
+      {:profiles-added true})))
+
+(defn dump-profiles
+  [args]
+  (if (-> args meta :profiles-added)
+    (str "\n with-profiles " (second args))
+    ""))
+
 (defn modules
   "Run a task in all related projects in dependent order"
-  [project task & args]
-  (let [modules (ordered-builds project)]
+  [project & args]
+  (let [modules (ordered-builds project)
+        profiles (compress-profiles project)
+        args (with-profiles profiles args)]
     (println "------------------------------------------------------------------------")
     (println " Module build order:")
     (doseq [p modules]
       (println "  " (:name p)))
     (doseq [project modules]
       (println "------------------------------------------------------------------------")
-      (println " Building" (:name project) (:version project))
+      (println " Building" (:name project) (:version project) (dump-profiles args))
       (println "------------------------------------------------------------------------")
-      (let [project (prj/init-project project)
-            task (main/lookup-alias task project)]
-        (main/apply-task task project args)))))
+      (binding [eval/*dir* (:root project)]
+        (let [exit-code (apply eval/sh (cons "lein" args))]
+          (when (pos? exit-code)
+            (throw (ex-info "Subprocess failed" {:exit-code exit-code}))))))))
