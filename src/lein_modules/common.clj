@@ -2,19 +2,20 @@
   (:require [leiningen.core.project :as prj]
             [clojure.java.io :as io]))
 
-(def parent
+(def read-project (memoize prj/read))
+
+(defn parent
   "Return the project's parent project"
-  (memoize
-    (fn [project]
-      (let [p (-> project :modules :parent)]
-        (if (map? p) ; handy for testing
-          p
-          (if-let [path (or p (-> project :parent prj/dependency-map :relative-path))]
-            (prj/read (-> (.. (io/file (:root project) path)
+  [project]
+  (let [p (-> project :modules :parent)]
+    (if (map? p) ; handy for testing
+      p
+      (if-let [path (or p (-> project :parent prj/dependency-map :relative-path))]
+        (read-project (-> (.. (io/file (:root project) path)
                             getCanonicalFile
                             getParentFile)
                         (io/file "project.clj")
-                        str))))))))
+                        str))))))
 
 (defn config
   "Traverse all parents to accumulate a list of :modules config,
