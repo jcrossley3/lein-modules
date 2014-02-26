@@ -84,6 +84,14 @@ any of the following keys:
   hierarchy doesn't match your directory hierarchy, e.g. when a parent
   module is in a sibling directory. Regardless of this option, build
   order is always determined by child module interdependence.
+* `:subprocess` - When true, which is the default, tasks are run for
+  each child project in a separate process. Setting it to false will
+  speed up your build considerably, and should be ok for most tasks,
+  but can lead to surprises, e.g. hooks from one project can infect
+  others, and the current working directory won't match the `:root` of
+  the child project. Still, for common tasks like `clean` it can be
+  convenient to configure a `:fast` profile that sets `:subprocess` to
+  false for projects with lots of child modules.
 
 ## Example
 
@@ -109,7 +117,10 @@ version itself will be tried as a key.
                {:dependencies [[midje _]
                                [ring/ring-devel "1.2.1"]]}
              :dist
-               {:modules {:dirs ["../dist"]}}}
+               {:modules {:dirs ["../dist"]}}
+
+             :fast
+               {:modules {:subprocess false}}}
 
   :modules  {:inherited
                {:repositories [["project:odd upstream"
@@ -117,8 +128,9 @@ version itself will be tried as a key.
                 :source-paths       ["src/main/clojure"]
                 :test-paths         ["src/test/clojure"]
                 :java-source-paths  ["src/main/java"]
-                :aliases ^:displace {"all" ["do" "clean," "test," "install"]}}
-  
+                :aliases            {"all" ^:displace ["do" "clean," "test," "install"]
+                                     "-f" ["with-profile" "+fast"]}}
+
              :versions {org.clojure/clojure           "1.5.1"
                         leiningen-core/leiningen-core "2.3.4"
                         midje/midje                   "1.6.0"
