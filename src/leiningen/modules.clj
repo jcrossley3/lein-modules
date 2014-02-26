@@ -77,6 +77,7 @@
     (map all (topological-sort deps))))
 
 (defn with-profiles
+  "Set the profiles in the args unless some already there"
   [profiles args]
   (if (some #{"with-profile" "with-profiles"} args)
     args
@@ -91,11 +92,11 @@
 (defn dump-profiles
   [args]
   (if (-> args meta :profiles-added)
-    (str "\n with-profiles " (second args))
+    (str "(" (second args) ")")
     ""))
 
 (defn modules
-  "Run a task in all related projects in dependent order"
+  "Run a task in all related projects in inter-dependent order"
   [project & args]
   (let [modules (ordered-builds project)
         profiles (compress-profiles project)
@@ -108,7 +109,11 @@
       (println "------------------------------------------------------------------------")
       (println " Building" (:name project) (:version project) (dump-profiles args))
       (println "------------------------------------------------------------------------")
-      (binding [eval/*dir* (:root project)]
-        (let [exit-code (apply eval/sh (cons "lein" args))]
-          (when (pos? exit-code)
-            (throw (ex-info "Subprocess failed" {:exit-code exit-code}))))))))
+      (if (get-in project [:modules :subprocess] true)
+        (binding [eval/*dir* (:root project)]
+          (let [exit-code (apply eval/sh (cons "lein" args))]
+            (when (pos? exit-code)
+              (throw (ex-info "Subprocess failed" {:exit-code exit-code})))))
+        (let [project (prj/init-project project)
+              task (main/lookup-alias (first args) project)]
+          (main/apply-task task project (rest args)))))))
