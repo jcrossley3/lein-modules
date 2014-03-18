@@ -29,10 +29,17 @@ associated module's project.clj.
 ## Usage
 
 From a parent module, use the `modules` higher-order task to build its
-"child" projects in the correct order, e.g.
+"child" projects in the correct order. When you first create a project
+that has inter-dependent modules, you must install them to your local
+repo prior to running any task that may attempt to resolve them. You
+can do this easily from the root:
 
-    $ lein modules clean
+    $ lein modules install
+
+Once installed, you can run any task you like from the root:
+
     $ lein modules test
+    $ lein modules deps :tree
     $ lein modules do clean, jar
     $ lein modules analias
 
