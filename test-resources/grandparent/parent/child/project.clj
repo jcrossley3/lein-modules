@@ -4,5 +4,8 @@
   :dependencies [[x _]
                  [y _]
                  [scope _ :scope "pom"]
-                 [z "1.2.3"]]
+                 [z "1.2.3"]
+                 [foo/a _]
+                 [foo/b _]
+                 [foo/c _]]
   :modules {:versions {parent "3.0"}})

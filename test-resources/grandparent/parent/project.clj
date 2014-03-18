@@ -6,4 +6,7 @@
                         :omit-source true
                         :dependencies [[org.clojure/clojure "1.5.1"]]}
             :versions {:ver "2.0"
-                       x/x  "1.1.1"}})
+                       x/x  "1.1.1"
+                       a "1"
+                       foo "2"
+                       c "1"}})
