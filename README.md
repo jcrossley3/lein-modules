@@ -1,4 +1,4 @@
-# lein-modules
+# lein-modules [![Build Status](https://travis-ci.org/jcrossley3/lein-modules.png?branch=master)](https://travis-ci.org/jcrossley3/lein-modules)
 
 On my build tool continuum of hate, [Leiningen](http://leiningen.org)
 and [Maven](http://maven.apache.org) are at opposite ends. This plugin
