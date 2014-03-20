@@ -29,10 +29,12 @@
   middleware calls with a metadata flag.
   See https://github.com/technomancy/leiningen/issues/1151"
   [project]
-  (if (-> project meta :modules-inherited)
+  (if (-> project meta ::modules-inherited)
     project
     (let [compost (compositize-profiles project)]
       (-> (prj/add-profiles project compost)
-        (vary-meta assoc :modules-inherited true)
+        (vary-meta assoc ::modules-inherited true)
         (vary-meta update-in [:profiles] merge compost)
-        (prj/set-profiles [(if (:inherited compost) :inherited {}) :default])))))
+        (prj/set-profiles (if (:inherited compost)
+                            [:inherited :default]
+                            [:default]))))))

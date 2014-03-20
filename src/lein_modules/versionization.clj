@@ -1,6 +1,5 @@
 (ns lein-modules.versionization
-  (:use [clojure.walk :only (postwalk)]
-        [lein-modules.common :only (config)]
+  (:use [lein-modules.common :only (config)]
         [leiningen.core.project :only (artifact-map)]))
 
 (defn versions
