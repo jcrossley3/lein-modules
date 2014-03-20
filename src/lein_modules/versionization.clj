@@ -40,8 +40,13 @@
   [project]
   (let [vmap (versions project)
         f #(for [d %] (expand-version d vmap))
-        walker #(if-let [x (:dependencies %)] (assoc % :dependencies (f x)) %)]
+        ff #(into {} (for [[k v] %]
+                       (if-let [x (and (map? v) (:dependencies v))]
+                         [k (assoc v :dependencies (f x))]
+                         [k v])))]
     (-> project
       (update-in [:dependencies] f)
       (update-in [:parent] expand-version vmap)
-      (vary-meta (partial postwalk walker)))))
+      (update-in [:profiles] ff)
+      (vary-meta update-in [:without-profiles :dependencies] f)
+      (vary-meta update-in [:profiles] ff))))

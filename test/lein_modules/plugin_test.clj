@@ -10,5 +10,10 @@
     (is (identical? uncle (middleware uncle)))))
 
 (deftest unmerge-should-retain-versions
-  (let [p (middleware (prj/read "test-resources/grandparent/parent/child/project.clj"))]
-    (is (= '[x/x "1.1.1"] (-> p (prj/unmerge-profiles [:default]) :dependencies first)))))
+  (let [p (-> (prj/read "test-resources/lambda/project.clj")
+            middleware
+            (prj/unmerge-profiles [:default]))]
+    (are [d expected] (= expected (-> p :dependencies (nth d)))
+         0 '[cheshire/cheshire "5.2.0"]
+         1 '[org.clojure/clojure "1.5.1"]
+         2 '[com.taoensso/timbre "3.1.6"])))
