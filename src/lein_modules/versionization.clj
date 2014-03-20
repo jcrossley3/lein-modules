@@ -1,5 +1,6 @@
 (ns lein-modules.versionization
-  (:use [lein-modules.common :only (config)]
+  (:use [clojure.walk :only (postwalk)]
+        [lein-modules.common :only (config)]
         [leiningen.core.project :only (artifact-map)]))
 
 (defn versions
@@ -38,7 +39,9 @@
   the :versions modules config"
   [project]
   (let [vmap (versions project)
-        f #(for [d %] (expand-version d vmap))]
+        f #(for [d %] (expand-version d vmap))
+        walker #(if-let [x (:dependencies %)] (assoc % :dependencies (f x)) %)]
     (-> project
       (update-in [:dependencies] f)
-      (update-in [:parent] expand-version vmap))))
+      (update-in [:parent] expand-version vmap)
+      (vary-meta (partial postwalk walker)))))
