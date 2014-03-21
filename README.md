@@ -16,14 +16,14 @@ It has never been tested with any Leiningen version older than 2.3.4.
 
 ## Installation
 
-Put `[lein-modules "0.2.0"]` into the `:plugins` vector of
+Put `[lein-modules "0.2.1"]` into the `:plugins` vector of
 your `:user` profile.
 
 Installed globally, the plugin's implicit middleware will only affect
 those projects that include a `:modules` map in their project.clj.
 
 But if you'd rather not install it globally, put
-`[lein-modules "0.2.0"]` into the `:plugins` vector of every
+`[lein-modules "0.2.1"]` into the `:plugins` vector of every
 associated module's project.clj.
 
 ## Usage
@@ -74,15 +74,16 @@ any of the following keys:
 * `:versions` - A mapping of dependency symbols to version strings. As
   a simpler alternative to Maven's dependency management, versions for
   child module dependencies and parent vectors will be expanded from
-  this map. Fully-qualified symbols, e.g. `group-id/artifact-id`, from
-  project dependency vectors are mapped to version strings that will
-  replace those in the child project map. The map is searched
-  recursively (values may be keys in the same map) to find a matching
-  version string, useful when multiple dependencies share the same
-  version. This allows you to maintain the versions of your child
-  modules' shared dependencies in a single place. And like the
-  `:inherited` profile, when multiple `:versions` maps are found among
-  ancestors, the most immediate take precedence.
+  this map. It is recursively searched -- values may be keys in the
+  same map -- for a version string using the following keys, in order:
+  the fully-qualified id field, `group-id/artifact-id`, of the
+  dependency vector, then its version field, then just the artifact
+  id, and finally just the group id. The first non-nil value is
+  returned, otherwise the dependency's version is returned. This
+  allows you to concisely maintain the versions of your child modules'
+  shared dependencies in a single place. And like the `:inherited`
+  profile, when multiple `:versions` maps are found among ancestors,
+  the most immediate take precedence.
 * `:dirs` - A vector of relative paths. Normally, child modules are
   discovered by searching for project.clj files beneath the project's
   `:root` with a proper `:parent` reference, but this vector can
@@ -139,8 +140,8 @@ version itself will be tried as a key.
                                      "-f" ["with-profile" "+fast"]}}
 
              :versions {org.clojure/clojure           "1.5.1"
-                        leiningen-core/leiningen-core "2.3.4"
-                        midje/midje                   "1.6.0"
+                        leiningen-core                "2.3.4"
+                        midje                         "1.6.0"
 
                         :immutant                     "1.0.3-SNAPSHOT"
                         :jbossas                      "7.2.x.slim.incremental.12"
@@ -149,8 +150,7 @@ version itself will be tried as a key.
                         org.immutant/immutant-core    :immutant
                         org.immutant/immutant-common  :immutant
 
-                        org.jboss.as/jboss-as-server  :jbossas
-                        org.jboss.as/jboss-as-jmx     :jbossas}})
+                        org.jboss.as                  :jbossas}})
 ```
 
 ## License
