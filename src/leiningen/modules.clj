@@ -109,9 +109,9 @@
       (println "------------------------------------------------------------------------")
       (println " Building" (:name project) (:version project) (dump-profiles args))
       (println "------------------------------------------------------------------------")
-      (if (get-in project [:modules :subprocess] true)
+      (if-let [cmd (get-in project [:modules :subprocess] "lein")]
         (binding [eval/*dir* (:root project)]
-          (let [exit-code (apply eval/sh (cons "lein" args))]
+          (let [exit-code (apply eval/sh (cons cmd args))]
             (when (pos? exit-code)
               (throw (ex-info "Subprocess failed" {:exit-code exit-code})))))
         (let [project (prj/init-project project)
