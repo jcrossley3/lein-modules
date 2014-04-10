@@ -12,11 +12,13 @@ Features include the building of child projects in dependency order,
 flexible project inheritance based on Leiningen profiles, and a simple
 dependency management mechanism.
 
-It has never been tested with any Leiningen version older than 2.3.4.
+Minimum supported Leiningen version: 2.3.4
+
+Minimum supported Clojure version: 1.5.1
 
 ## Installation
 
-Put `[lein-modules "0.2.1"]` into the `:plugins` vector of
+Put `[lein-modules "0.2.2"]` into the `:plugins` vector of
 your `:user` profile.
 
 Installed globally, the plugin's implicit middleware will only affect
@@ -50,12 +52,18 @@ maps, both of which are described in the next section.
 
 ## Configuration
 
-For the `modules` task to discover child projects automatically, the
-`:relative-path` should be set in the `:parent` vector of each child.
+The `modules` task will attempt to discover child projects
+automatically, making the default assumption that each child project
+resides in an immediate subdirectory of its parent.
 
 Optionally, a `:modules` map may be added to your project, containing
 any of the following keys:
 
+* `:parent` - A string denoting the relative path to the parent
+  project's directory. If unset, the value of the `:relative-path` of
+  the `:parent` vector will be used, and if that's unset, the default
+  value is `".."`. You can explicitly set it to `nil` to signify that
+  the project has no parent.
 * `:inherited` - This is just a Leiningen profile. You could
   alternatively put it in `:profiles` to emphasize that point. The
   implicit plugin middleware will create composite profiles for all
@@ -92,14 +100,16 @@ any of the following keys:
   hierarchy doesn't match your directory hierarchy, e.g. when a parent
   module is in a sibling directory. Regardless of this option, build
   order is always determined by child module interdependence.
-* `:subprocess` - When true, which is the default, tasks are run for
-  each child project in a separate process. Setting it to false will
-  speed up your build considerably, and should be ok for most tasks,
-  but can lead to surprises, e.g. hooks from one project can infect
-  others, and the current working directory won't match the `:root` of
-  the child project. Still, for common tasks like `clean` it can be
-  convenient to configure a `:fast` profile that sets `:subprocess` to
-  false for projects with lots of child modules.
+* `:subprocess` - The name of the executable invoked for each child
+  project in a separate process by the `modules` subtask. Its default
+  value is `"lein"`. You can optionally set it to false. This will
+  speed up your build considerably since it runs every child module's
+  task in the same process that invoked `lein modules ...` This should
+  be ok for most tasks, but can lead to surprises, e.g. hooks from one
+  project can infect others, and the current working directory won't
+  match the `:root` of the child project. Still, for common tasks like
+  `clean` it can be convenient to configure a `:fast` profile that
+  sets `:subprocess` to false for projects with lots of child modules.
 
 ## Example
 

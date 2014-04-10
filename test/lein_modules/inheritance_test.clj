@@ -53,7 +53,7 @@
     (is (= [:root :inherited :dist] (:foo (-> p (prj/unmerge-profiles [:default]) (prj/merge-profiles [:dist])))))))
 
 (deftest profile-application-uninherited
-  (let [p (inherit (prj/read "test-resources/grandparent/uncle/project.clj"))]
+  (let [p (inherit (prj/read "test-resources/uncle/project.clj"))]
     (is (= [:provided :dev] (:foo p)))
     (is (= [:provided :dev :dist] (:foo (prj/merge-profiles p [:dist]))))
     (is (= [:provided :dev :dist] (:foo (prj/set-profiles p [:default :dist]))))

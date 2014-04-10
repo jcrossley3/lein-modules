@@ -21,11 +21,13 @@
 (deftest children-checking
   (let [ann     (prj/read "test-resources/grandparent/parent/child/project.clj")
         nancy   (prj/read "test-resources/grandparent/parent/sibling/project.clj")
+        bert    (prj/read "test-resources/grandparent/parent/stepchild/project.clj")
         flip    (prj/read "test-resources/grandparent/parent/project.clj")
-        fiona   (prj/read "test-resources/grandparent/stepmom/project.clj")
-        uncle   (prj/read "test-resources/grandparent/uncle/project.clj")
+        fiona   (prj/read "test-resources/stepmom/project.clj")
+        uncle   (prj/read "test-resources/uncle/project.clj")
         grandpa (prj/read "test-resources/grandparent/project.clj")]
     (is (child? flip ann))
+    (is (not (child? flip bert)))
     (is (child? grandpa flip))
     (is (not (child? grandpa ann)))
     (is (not (child? grandpa uncle)))

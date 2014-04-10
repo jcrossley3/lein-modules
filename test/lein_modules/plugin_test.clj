@@ -6,7 +6,7 @@
 (deftest middleware-only-if-config-present
   (let [child (prj/read "test-resources/grandparent/parent/child/project.clj")]
     (is (not (identical? child (middleware child)))))
-  (let [uncle (prj/read "test-resources/grandparent/uncle/project.clj")]
+  (let [uncle (prj/read "test-resources/uncle/project.clj")]
     (is (identical? uncle (middleware uncle)))))
 
 (deftest unmerge-should-retain-versions

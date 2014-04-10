@@ -1,7 +1,7 @@
 (defproject parent "0.1.0-SNAPSHOT"
   :description "parent"
   :url "http://example.com/parent"
-  :parent [grandparent _ :relative-path "../pom.xml"]
+  :parent [grandparent _ :relative-path ".."]
   :modules {:inherited {:java-source-paths ["src/main/java"]
                         :omit-source true
                         :dependencies [[org.clojure/clojure "1.5.1"]]}
