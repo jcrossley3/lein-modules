@@ -59,11 +59,6 @@ resides in an immediate subdirectory of its parent.
 Optionally, a `:modules` map may be added to your project, containing
 any of the following keys:
 
-* `:parent` - A string denoting the relative path to the parent
-  project's directory. If unset, the value of the `:relative-path` of
-  the `:parent` vector will be used, and if that's unset, the default
-  value is `".."`. You can explicitly set it to `nil` to signify that
-  the project has no parent.
 * `:inherited` - This is just a Leiningen profile. You could
   alternatively put it in `:profiles` to emphasize that point. The
   implicit plugin middleware will create composite profiles for all
@@ -92,24 +87,31 @@ any of the following keys:
   shared dependencies in a single place. And like the `:inherited`
   profile, when multiple `:versions` maps are found among ancestors,
   the most immediate take precedence.
-* `:dirs` - A vector of relative paths. Normally, child modules are
-  discovered by searching for project.clj files beneath the project's
-  `:root` with a proper `:parent` reference, but this vector can
-  override that behavior by specifying exactly which directories
-  contain child modules. This vector is only required when your module
-  hierarchy doesn't match your directory hierarchy, e.g. when a parent
-  module is in a sibling directory. Regardless of this option, build
-  order is always determined by child module interdependence.
-* `:subprocess` - The name of the executable invoked for each child
-  project in a separate process by the `modules` subtask. Its default
+* `:dirs` - A vector of strings denoting the relative paths to the
+  project's child modules. Normally, they're discovered automatically
+  by searching for project.clj files beneath the project's `:root`
+  with a related parent, but this vector can override that behavior by
+  specifying exactly which directories contain child modules. This
+  vector is only required when your module hierarchy doesn't match
+  your directory hierarchy, e.g. when a parent module is in a sibling
+  directory. Regardless of this option, build order is always
+  determined by child module interdependence.
+* `:parent` - A string denoting the relative path to the parent
+  project's directory. If unset, the value of the `:relative-path` of
+  the `:parent` vector will be used, and if that's unset, the default
+  value is `".."`. You can explicitly set it to `nil` to signify that
+  the project has no parent.
+* `:subprocess` - The name of the executable invoked by the `modules`
+  subtask for each child module in a separate process. Its default
   value is `"lein"`. You can optionally set it to false. This will
   speed up your build considerably since it runs every child module's
   task in the same process that invoked `lein modules ...` This should
-  be ok for most tasks, but can lead to surprises, e.g. hooks from one
-  project can infect others, and the current working directory won't
-  match the `:root` of the child project. Still, for common tasks like
-  `clean` it can be convenient to configure a `:fast` profile that
-  sets `:subprocess` to false for projects with lots of child modules.
+  be ok for most tasks, but can sometimes lead to surprises, e.g.
+  hooks from one project can infect others, and the current working
+  directory won't match the `:root` of the child project. Still, for
+  common tasks like `clean` it can be convenient to configure a
+  `:fast` profile that sets `:subprocess` to false for projects with
+  lots of child modules.
 
 ## Example
 
