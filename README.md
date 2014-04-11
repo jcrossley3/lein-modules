@@ -98,9 +98,9 @@ any of the following keys:
   determined by child module interdependence.
 * `:parent` - A string denoting the relative path to the parent
   project's directory. If unset, the value of the `:relative-path` of
-  the `:parent` vector will be used, and if that's unset, the default
-  value is `".."`. You can explicitly set it to `nil` to signify that
-  the project has no parent.
+  Leiningen's `:parent` vector will be used, and if that's unset, the
+  default value is `".."`. You can explicitly set it to `nil` to
+  signify that the project has no parent.
 * `:subprocess` - The name of the executable invoked by the `modules`
   subtask for each child module in a separate process. Its default
   value is `"lein"`. You can optionally set it to false. This will
