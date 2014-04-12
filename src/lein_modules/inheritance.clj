@@ -3,13 +3,16 @@
   (:require [leiningen.core.project :as prj]))
 
 (defn compositor
-  "Returns a reducing function that turns a profile into a composite,
-  e.g. {:test {:a 1}} becomes {:test [:test-foo] :test-foo {:a 1}} for
-  a project named 'foo'"
+  "Returns a reducing function that turns a non-composite profile into
+   a composite, e.g. {:test {:a 1}} becomes {:test
+   [:test-foo] :test-foo {:a 1}} for a project named 'foo'. Composite
+   profiles are simply concatenated"
   [project]
   (fn [m [k v]]
-    (let [n (keyword (format "%s-%s" (name k) (:name project)))]
-      (assoc (update-in m [k] #(vec (cons n %))) n v))))
+    (if (prj/composite-profile? v)
+      (update-in m [k] (comp vec distinct concat) v)
+      (let [n (keyword (format "%s%s-%s" (or (namespace k) "") (name k) (:name project)))]
+        (assoc (update-in m [k] #(vec (cons n %))) n v)))))
 
 (defn compositize-profiles
   "Return a profile map containing all the profiles found in the
@@ -19,9 +22,10 @@
   (loop [p project, result nil]
     (if (nil? p)
       result
-      (recur (parent p) (reduce (compositor p) result
-                          (conj (select-keys (:modules p) [:inherited])
-                            (:profiles p)))))))
+      (recur (parent p)
+        (reduce (compositor p) result
+          (conj (select-keys (:modules p) [:inherited])
+            (dissoc (:profiles (meta p)) :user :leiningen/test)))))))
 
 (defn inherit
   "Add profiles from parents, setting any :inherited ones if found,

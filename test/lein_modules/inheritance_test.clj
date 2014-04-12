@@ -25,12 +25,12 @@
 
 (deftest compositization
   (let [pp {:name "pp"}
-        p {:name "p"
-           :modules {:parent pp}
-           :profiles {:test {:a 1}}}
-        c {:name "c"
-           :modules {:parent p}
-           :profiles {:test {:a 2}}}]
+        p (with-meta {:name "p"
+                      :modules {:parent pp}}
+            {:profiles {:test {:a 1}}})
+        c (with-meta {:name "c"
+                      :modules {:parent p}}
+            {:profiles {:test {:a 2}}})]
     (is nil? (compositize-profiles nil))
     (is nil? (compositize-profiles pp))
     (is (= {:test [:test-p] :test-p {:a 1}}
