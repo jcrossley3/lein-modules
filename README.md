@@ -18,14 +18,14 @@ Minimum supported Clojure version: 1.5.1
 
 ## Installation
 
-Put `[lein-modules "0.2.2"]` into the `:plugins` vector of
+Put `[lein-modules "0.2.3"]` into the `:plugins` vector of
 your `:user` profile.
 
 Installed globally, the plugin's implicit middleware will only affect
 those projects that include a `:modules` map in their project.clj.
 
 But if you'd rather not install it globally, put
-`[lein-modules "0.2.2"]` into the `:plugins` vector of every
+`[lein-modules "0.2.3"]` into the `:plugins` vector of every
 associated module's project.clj.
 
 ## Usage
@@ -126,7 +126,7 @@ version itself will be tried as a key.
 
 ```clj
 (defproject org.immutant/immutant-parent "1.0.3-SNAPSHOT"
-  :plugins [[lein-modules "0.2.2"]]
+  :plugins [[lein-modules "0.2.3"]]
   :packaging "pom"
 
   :profiles {:provided
