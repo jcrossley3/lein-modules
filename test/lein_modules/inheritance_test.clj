@@ -58,3 +58,10 @@
     (is (= [:provided :dev :dist] (:foo (prj/merge-profiles p [:dist]))))
     (is (= [:provided :dev :dist] (:foo (prj/set-profiles p [:default :dist]))))
     (is (= [:dist] (:foo (-> p (prj/unmerge-profiles [:default]) (prj/merge-profiles [:dist])))))))
+
+(deftest inherit-should-not-create-redundant-deps
+  ;; 'lein deps :tree' will bomb if redundant deps exist and because
+  ;; :base includes a non-qualified clojure-complete, multiple :base
+  ;; profiles bring in multiple clojure-complete deps
+  (let [p (inherit project)]
+    (is (= (:dependencies p) (-> p :dependencies distinct)))))

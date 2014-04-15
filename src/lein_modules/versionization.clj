@@ -38,7 +38,7 @@
   the :versions modules config"
   [project]
   (let [vmap (versions project)
-        f #(for [d %] (expand-version d vmap))
+        f #(with-meta (for [d %] (expand-version d vmap)) (meta %))
         ff #(into {} (for [[k v] %]
                        (if-let [x (and (map? v) (:dependencies v))]
                          [k (assoc v :dependencies (f x))]

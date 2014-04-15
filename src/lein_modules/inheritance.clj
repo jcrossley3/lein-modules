@@ -2,6 +2,13 @@
   (:use [lein-modules.common :only (config parent)])
   (:require [leiningen.core.project :as prj]))
 
+(defn normalize-deps
+  "Fully-qualifies any dependency vector within the profile map"
+  [m]
+  (if (:dependencies m)
+    (update-in m [:dependencies] (partial map (comp prj/dependency-vec prj/dependency-map)))
+    m))
+
 (defn compositor
   "Returns a reducing function that turns a non-composite profile into
    a composite, e.g. {:test {:a 1}} becomes {:test
@@ -12,7 +19,7 @@
     (if (prj/composite-profile? v)
       (update-in m [k] (comp vec distinct concat) v)
       (let [n (keyword (format "%s%s-%s" (or (namespace k) "") (name k) (:name project)))]
-        (assoc (update-in m [k] #(vec (cons n %))) n v)))))
+        (assoc (update-in m [k] #(vec (cons n %))) n (normalize-deps v))))))
 
 (defn compositize-profiles
   "Return a profile map containing all the profiles found in the
