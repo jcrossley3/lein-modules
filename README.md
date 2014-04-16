@@ -71,24 +71,29 @@ any of the following keys:
   your project, including the default ones. This bears repeating:
   profile inheritance occurs whether you define an `:inherited`
   profile or not, because **all** profile maps from ancestors are
-  automatically added to the child (excluding `:user` and those
-  associated with keywords from the `:leiningen` namespace).
-  Therefore, ancestor profiles such as `:dev`, `:provided`,
-  `:production` or `:whatever` are [un]merged in the child as
-  appropriate for the task at hand.
+  automatically added to the child (excluding `:user` and keywords
+  from the `:leiningen` namespace). Therefore, ancestor profiles such
+  as `:dev`, `:provided`, `:production` or `:whatever` are [un]merged
+  in the child as appropriate for the task at hand.
+
 * `:versions` - A mapping of dependency symbols to version strings. As
   a simpler alternative to Maven's dependency management, versions for
   child module dependencies and parent vectors will be expanded from
   this map. It is recursively searched -- values may be keys in the
-  same map -- for a version string using the following keys, in order:
-  the fully-qualified id field, `group-id/artifact-id`, of the
-  dependency vector, then its version field, then just the artifact
-  id, and finally just the group id. The first non-nil value is
-  returned, otherwise the dependency's version is returned. This
-  allows you to concisely maintain the versions of your child modules'
-  shared dependencies in a single place. And like the `:inherited`
-  profile, when multiple `:versions` maps are found among ancestors,
-  the most immediate take precedence.
+  same map -- for a version string using the following elements of the
+  dependency vector, in order:
+
+    1. the fully-qualified id field, `group-id/artifact-id`
+    2. the version field
+    3. the artifact id
+    4. the group id
+
+  The first non-nil value is returned, otherwise the dependency's
+  version is returned. This allows you to concisely maintain the
+  versions of your child modules' shared dependencies in a single
+  place. And like the `:inherited` profile, when multiple `:versions`
+  maps are found among ancestors, the most immediate take precedence.
+
 * `:dirs` - A vector of strings denoting the relative paths to the
   project's child modules. Normally, they're discovered automatically
   by searching for project.clj files beneath the project's `:root`
@@ -98,18 +103,20 @@ any of the following keys:
   your directory hierarchy, e.g. when a parent module is in a sibling
   directory. Regardless of this option, build order is always
   determined by child module interdependence.
+
 * `:parent` - A string denoting the relative path to the parent
   project's directory. If unset, the value of the `:relative-path` of
   Leiningen's `:parent` vector will be used, and if that's unset, the
   default value is `".."`. You can explicitly set it to `nil` to
   signify that the project has no parent.
+
 * `:subprocess` - The name of the executable invoked by the `modules`
   subtask for each child module in a separate process. Its default
   value is `"lein"`. You can optionally set it to false. This will
   speed up your build considerably since it runs every child module's
-  task in the same process that invoked `lein modules ...` This should
-  be ok for most tasks, but can sometimes lead to surprises, e.g.
-  hooks from one project can infect others, and the current working
+  task in the same process that invoked `lein modules`. This should be
+  ok for most tasks, but can sometimes lead to surprises, e.g. hooks
+  from one project can infect others, and the current working
   directory won't match the `:root` of the child project. Still, for
   common tasks like `clean` it can be convenient to configure a
   `:fast` profile that sets `:subprocess` to false for projects with
