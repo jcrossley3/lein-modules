@@ -70,10 +70,12 @@ any of the following keys:
   `:default` to be a composite of whatever profiles make sense for
   your project, including the default ones. This bears repeating:
   profile inheritance occurs whether you define an `:inherited`
-  profile or not, because **all** profile maps from ancestors, e.g.
-  `:dev`, `:provided`, `:production` or `:whatever`, are automatically
-  added to the child. Therefore, they are [un]merged as appropriate
-  for the task at hand.
+  profile or not, because **all** profile maps from ancestors are
+  automatically added to the child (excluding `:user` and those
+  associated with keywords from the `:leiningen` namespace).
+  Therefore, ancestor profiles such as `:dev`, `:provided`,
+  `:production` or `:whatever` are [un]merged in the child as
+  appropriate for the task at hand.
 * `:versions` - A mapping of dependency symbols to version strings. As
   a simpler alternative to Maven's dependency management, versions for
   child module dependencies and parent vectors will be expanded from

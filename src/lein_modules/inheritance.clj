@@ -2,12 +2,22 @@
   (:use [lein-modules.common :only (config parent)])
   (:require [leiningen.core.project :as prj]))
 
+(def normalizer (partial map (comp prj/dependency-vec prj/dependency-map)))
+
 (defn normalize-deps
-  "Fully-qualifies any dependency vector within the profile map"
+  "Fully-qualifies any dependency vector within the profile map. Only
+  required for 2.3.4"
   [m]
   (if (:dependencies m)
-    (update-in m [:dependencies] (partial map (comp prj/dependency-vec prj/dependency-map)))
+    (update-in m [:dependencies] normalizer)
     m))
+
+(defn filter-profiles
+  "We don't want to inherit the :user or :leiningen/test profiles"
+  [m]
+  (let [ignored [:user]
+        lein-ns (->> m keys (filter #(= "leiningen" (namespace %))))]
+    (apply dissoc m (concat ignored lein-ns))))
 
 (defn compositor
   "Returns a reducing function that turns a non-composite profile into
@@ -32,7 +42,7 @@
       (recur (parent p)
         (reduce (compositor p) result
           (conj (select-keys (:modules p) [:inherited])
-            (dissoc (:profiles (meta p)) :user :leiningen/test)))))))
+            (filter-profiles (:profiles (meta p)))))))))
 
 (defn inherit
   "Add profiles from parents, setting any :inherited ones if found,
