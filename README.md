@@ -130,11 +130,11 @@ version itself will be tried as a key.
   :packaging "pom"
 
   :profiles {:provided
-               {:dependencies [[org.clojure/clojure _]
-                               [org.jboss.as/jboss-as-server _]
+               {:dependencies [[org.clojure/clojure "_"]
+                               [org.jboss.as/jboss-as-server "_"]
                                [org.jboss.as/jboss-as-web :jbossas]]}
              :dev
-               {:dependencies [[midje _]
+               {:dependencies [[midje "_"]
                                [ring/ring-devel "1.2.1"]]}
              :dist
                {:modules {:dirs ["../dist"]}}
