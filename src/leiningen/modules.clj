@@ -34,19 +34,26 @@
           (map (comp prj/read str))
           (filter (partial child? project)))))))
 
-(defn progeny
-  "Recursively return the project's children"
-  [project]
-  (let [children (children project)]
-    (if (empty? children)
-      [project]
-      (cons project (mapcat progeny children)))))
-
 (defn id
   "Returns fully-qualified symbol identifier for project"
   [project]
   (if project
     (symbol (:group project) (:name project))))
+
+(defn progeny
+  "Recursively return the project's children in a map keyed by id"
+  [project]
+  (apply merge {(id project) project} (map progeny (children project))))
+
+(defn interdependence
+  "Turn a progeny map (symbols to projects) into a mapping of projects
+  to their dependent projects"
+  [m]
+  (let [deps (fn [p] (->> (conj (:dependencies p) [(id (parent p))])
+                      (map first)
+                      (map m)
+                      (remove nil?)))]
+    (reduce (fn [acc [_ p]] (assoc acc p (deps p))) {} m)))
 
 (defn topological-sort [deps]
   "A topological sort of a mapping of graph nodes to their edges (credit Jon Harrop)"
@@ -57,27 +64,12 @@
         (recur (dissoc deps dep) (conj resolved dep) (conj result dep))
         (throw (Exception. (apply str "Cyclic dependency: " (interpose ", " (keys deps)))))))))
 
-(defn interdependents
-  "Return a project's dependency symbols in common with targets"
-  [project targets]
-  (->> (cons [(id (parent project))] (:dependencies project))
-    (map first)
-    (filter (set targets))))
-
-(defn ordered-builds
-  "Represent the inter-dependence of project descendants and apply a
-  topological sort"
-  [project]
-  (let [all  (reduce #(assoc % (id %2) %2) {} (progeny project))
-        tgts (keys all)
-        deps (reduce
-               (fn [acc p] (assoc acc (id p) (interdependents p tgts)))
-               {}
-               (vals all))]
-    (map all (topological-sort deps))))
+(def ordered-builds
+  "Sort a representation of interdependent projects topologically"
+  (comp topological-sort interdependence progeny))
 
 (defn with-profiles
-  "Set the profiles in the args unless some already there"
+  "Set the profiles in the args unless some are already there"
   [profiles args]
   (if (some #{"with-profile" "with-profiles"} args)
     args

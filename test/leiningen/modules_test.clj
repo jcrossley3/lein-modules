@@ -36,7 +36,7 @@
     (is (= (rootset [ann nancy]) (rootset (children flip))))
     (is (= (rootset [ann nancy]) (rootset (children fiona))))
     (is (= (rootset [flip]) (rootset (children grandpa))))
-    (is (= (rootset [grandpa flip ann nancy]) (rootset (progeny grandpa))))))
+    (is (= (rootset [grandpa flip ann nancy]) (rootset (vals (progeny grandpa)))))))
 
 (deftest build-order
   (let [p (prj/read "test-resources/grandparent/project.clj")]
