@@ -37,3 +37,7 @@
     (is (= (rootset [ann nancy]) (rootset (children fiona))))
     (is (= (rootset [flip]) (rootset (children grandpa))))
     (is (= (rootset [grandpa flip ann nancy]) (rootset (progeny grandpa))))))
+
+(deftest build-order
+  (let [p (prj/read "test-resources/grandparent/project.clj")]
+    (is (= ["grandparent" "parent" "sibling" "child"] (->> p ordered-builds (map :name))))))

@@ -7,5 +7,6 @@
                  [z "1.2.3"]
                  [foo/a _]
                  [foo/b _]
-                 [foo/c _]]
+                 [foo/c _]
+                 [sibling "0.1.0-SNAPSHOT"]]
   :modules {:versions {parent "3.0"}})
