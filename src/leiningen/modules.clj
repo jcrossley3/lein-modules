@@ -2,6 +2,7 @@
   (:require [leiningen.core.project :as prj]
             [leiningen.core.main :as main]
             [leiningen.core.eval :as eval]
+            [leiningen.core.utils :as utils]
             [clojure.java.io :as io])
   (:use [lein-modules.inheritance :only (inherit)]
         [lein-modules.common      :only (parent)]
@@ -18,6 +19,14 @@
     (-> project meta :included-profiles distinct)
     (-> project meta :profiles)))
 
+(defn file-seq-sans-symlinks
+  "A tree seq on java.io.Files that aren't symlinks"
+  [dir]
+  (tree-seq
+    (fn [^java.io.File f] (and (.isDirectory f) (not (utils/symlink? f))))
+    (fn [^java.io.File d] (seq (.listFiles d)))
+    dir))
+
 (defn children
   "Return the child maps for a project with the same active profiles"
   [project]
@@ -28,7 +37,7 @@
                (memfn getCanonicalPath)
                #(io/file (:root project) % "project.clj"))
           dirs)
-        (->> (file-seq (io/file (:root project))) 
+        (->> (file-seq-sans-symlinks (io/file (:root project)))
           (filter #(= "project.clj" (.getName %)))
           (remove #(= (:root project) (.getParent %)))
           (map (comp prj/read str))
@@ -48,12 +57,12 @@
 (defn interdependence
   "Turn a progeny map (symbols to projects) into a mapping of projects
   to their dependent projects"
-  [m]
+  [pm]
   (let [deps (fn [p] (->> (conj (:dependencies p) [(id (parent p))])
                       (map first)
-                      (map m)
+                      (map pm)
                       (remove nil?)))]
-    (reduce (fn [acc [_ p]] (assoc acc p (deps p))) {} m)))
+    (reduce (fn [acc [_ p]] (assoc acc p (deps p))) {} pm)))
 
 (defn topological-sort [deps]
   "A topological sort of a mapping of graph nodes to their edges (credit Jon Harrop)"
@@ -67,6 +76,24 @@
 (def ordered-builds
   "Sort a representation of interdependent projects topologically"
   (comp topological-sort interdependence progeny))
+
+(defn create-checkouts
+  "Create checkout symlinks for interdependent projects"
+  [projects]
+  (doseq [[project deps] projects]
+    (when-not (empty? deps)
+      (let [dir (io/file (:root project) "checkouts")]
+        (when-not (.exists dir)
+          (.mkdir dir))
+        (println "Checkouts for" (:name project))
+        (binding [eval/*dir* dir]
+          (doseq [dep deps]
+            (eval/sh "rm" "-f" (:name dep))
+            (eval/sh "ln" "-sv" (:root dep) (:name dep))))))))
+
+(def checkout-dependencies
+  "Setup checkouts/ for a project and its interdependent children"
+  (comp create-checkouts interdependence progeny))
 
 (defn with-profiles
   "Set the profiles in the args unless some are already there"
@@ -88,24 +115,39 @@
     ""))
 
 (defn modules
-  "Run a task in all related projects in inter-dependent order"
+  "Run a task for all related projects in dependency order.
+
+Any task (along with any arguments) will be run in this project and
+then each of this project's child modules. For example:
+
+  $ lein modules install
+  $ lein modules deps :tree
+  $ lein modules do clean, test
+  $ lein modules analias
+
+You can create 'checkout dependencies' for all interdependent modules with
+the :checkouts option:
+
+  $ lein modules :checkouts"
   [project & args]
-  (let [modules (ordered-builds project)
-        profiles (compress-profiles project)
-        args (with-profiles profiles args)]
-    (println "------------------------------------------------------------------------")
-    (println " Module build order:")
-    (doseq [p modules]
-      (println "  " (:name p)))
-    (doseq [project modules]
+  (if (= args [":checkouts"])
+    (checkout-dependencies project)
+    (let [modules (ordered-builds project)
+          profiles (compress-profiles project)
+          args (with-profiles profiles args)]
       (println "------------------------------------------------------------------------")
-      (println " Building" (:name project) (:version project) (dump-profiles args))
-      (println "------------------------------------------------------------------------")
-      (if-let [cmd (get-in project [:modules :subprocess] "lein")]
-        (binding [eval/*dir* (:root project)]
-          (let [exit-code (apply eval/sh (cons cmd args))]
-            (when (pos? exit-code)
-              (throw (ex-info "Subprocess failed" {:exit-code exit-code})))))
-        (let [project (prj/init-project project)
-              task (main/lookup-alias (first args) project)]
-          (main/apply-task task project (rest args)))))))
+      (println " Module build order:")
+      (doseq [p modules]
+        (println "  " (:name p)))
+      (doseq [project modules]
+        (println "------------------------------------------------------------------------")
+        (println " Building" (:name project) (:version project) (dump-profiles args))
+        (println "------------------------------------------------------------------------")
+        (if-let [cmd (get-in project [:modules :subprocess] "lein")]
+          (binding [eval/*dir* (:root project)]
+            (let [exit-code (apply eval/sh (cons cmd args))]
+              (when (pos? exit-code)
+                (throw (ex-info "Subprocess failed" {:exit-code exit-code})))))
+          (let [project (prj/init-project project)
+                task (main/lookup-alias (first args) project)]
+            (main/apply-task task project (rest args))))))))

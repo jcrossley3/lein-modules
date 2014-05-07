@@ -4,6 +4,7 @@
         [lein-modules.common :only (parent)]
         [lein-modules.inheritance :only (inherit)])
   (:require [leiningen.core.project :as prj]
+            [leiningen.clean :refer [delete-file-recursively]]
             [clojure.java.io        :as io]))
 
 (defn rootset
@@ -41,3 +42,21 @@
 (deftest build-order
   (let [p (prj/read "test-resources/grandparent/project.clj")]
     (is (= ["grandparent" "parent" "sibling" "child"] (->> p ordered-builds (map :name))))))
+
+(deftest checkouts
+  (let [grandpa (io/file "test-resources/grandparent/checkouts")
+        dad     (io/file "test-resources/grandparent/parent/checkouts")
+        child   (io/file "test-resources/grandparent/parent/child/checkouts")
+        sib     (io/file "test-resources/grandparent/parent/sibling/checkouts")]
+    (try
+      (checkout-dependencies (prj/read "test-resources/grandparent/project.clj"))
+      (is (not (.exists grandpa)))
+      (is (.exists dad))
+      (is (.exists child))
+      (is (.exists (io/file child "sibling")))
+      (is (.exists (io/file child "parent")))
+      (is (.exists sib))
+      (finally
+        (delete-file-recursively dad)
+        (delete-file-recursively child)
+        (delete-file-recursively sib)))))

@@ -1,16 +1,14 @@
 # lein-modules [![Build Status](https://travis-ci.org/jcrossley3/lein-modules.png?branch=master)](https://travis-ci.org/jcrossley3/lein-modules)
 
-On my build tool continuum of hate, [Leiningen](http://leiningen.org)
-and [Maven](http://maven.apache.org) are at opposite ends. This plugin
-is the result of my desire to transform the
+This plugin is the result of my desire to transform the
 [Immutant source tree](http://github.com/immutant/immutant) from a
 Maven
 [multi-module project](http://maven.apache.org/guides/mini/guide-multiple-modules.html)
 to a Leiningen one.
 
 Features include the building of child projects in dependency order,
-flexible project inheritance based on Leiningen profiles, and a simple
-dependency management mechanism.
+flexible project inheritance based on Leiningen profiles, a simple
+dependency management mechanism, and automatic checkout dependencies.
 
 Minimum supported Leiningen version: 2.3.4
 
@@ -18,14 +16,14 @@ Minimum supported Clojure version: 1.5.1
 
 ## Installation
 
-Put `[lein-modules "0.2.4"]` into the `:plugins` vector of
+Put `[lein-modules "0.2.5"]` into the `:plugins` vector of
 your `:user` profile.
 
 Installed globally, the plugin's implicit middleware will only affect
 those projects that include a `:modules` map in their project.clj.
 
 But if you'd rather not install it globally, put
-`[lein-modules "0.2.4"]` into the `:plugins` vector of every
+`[lein-modules "0.2.5"]` into the `:plugins` vector of every
 associated module's project.clj.
 
 ## Usage
@@ -50,6 +48,14 @@ the plugin's implicit middleware to 1) merge inherited profiles, and
 2) update the child's project map from its ancestors' `:versions`
 maps, both of which are described in the next section.
 
+### Checkout Dependencies
+
+Run the following command to automatically create
+[checkout dependencies](https://github.com/technomancy/leiningen/blob/stable/doc/TUTORIAL.md#checkout-dependencies)
+for each related module:
+
+    $ lein modules :checkouts
+    
 ## Configuration
 
 The `modules` task will attempt to discover child projects
@@ -135,7 +141,7 @@ version itself will be tried as a key.
 
 ```clj
 (defproject org.immutant/immutant-parent "1.0.3-SNAPSHOT"
-  :plugins [[lein-modules "0.2.4"]]
+  :plugins [[lein-modules "0.2.5"]]
   :packaging "pom"
 
   :profiles {:provided
