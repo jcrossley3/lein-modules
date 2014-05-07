@@ -46,7 +46,7 @@ Once installed, you can run any task you like from the root:
 From a child module, just use `lein` as you normally would, relying on
 the plugin's implicit middleware to 1) merge inherited profiles, and
 2) update the child's project map from its ancestors' `:versions`
-maps, both of which are described in the next section.
+maps, both of which are described in the Configuration section below.
 
 ### Checkout Dependencies
 
