@@ -40,7 +40,7 @@
         (->> (file-seq-sans-symlinks (io/file (:root project)))
           (filter #(= "project.clj" (.getName %)))
           (remove #(= (:root project) (.getParent %)))
-          (map (comp prj/read str))
+          (map (comp #(try (prj/read %) (catch Exception _)) str))
           (filter (partial child? project)))))))
 
 (defn id
@@ -52,7 +52,9 @@
 (defn progeny
   "Recursively return the project's children in a map keyed by id"
   [project]
-  (apply merge {(id project) project} (map progeny (children project))))
+  (let [kids (children project)]
+    (apply merge (into {} (map (juxt id identity) kids))
+      (map progeny (remove #(= (:root project) (:root %)) kids)))))
 
 (defn interdependence
   "Turn a progeny map (symbols to projects) into a mapping of projects
@@ -71,7 +73,7 @@
       result
       (if-let [dep (some (fn [[k v]] (if (empty? (remove resolved v)) k)) deps)]
         (recur (dissoc deps dep) (conj resolved dep) (conj result dep))
-        (throw (Exception. (apply str "Cyclic dependency: " (interpose ", " (keys deps)))))))))
+        (throw (Exception. (apply str "Cyclic dependency: " (interpose ", " (map :name (keys deps))))))))))
 
 (def ordered-builds
   "Sort a representation of interdependent projects topologically"

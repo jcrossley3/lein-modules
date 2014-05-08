@@ -25,8 +25,9 @@
         bert    (prj/read "test-resources/grandparent/parent/stepchild/project.clj")
         flip    (prj/read "test-resources/grandparent/parent/project.clj")
         fiona   (prj/read "test-resources/stepmom/project.clj")
+        grandpa (prj/read "test-resources/grandparent/project.clj")
         uncle   (prj/read "test-resources/uncle/project.clj")
-        grandpa (prj/read "test-resources/grandparent/project.clj")]
+        weirdo  (update-in uncle [:modules :dirs] conj "." "../grandparent/parent/sibling")]
     (is (child? flip ann))
     (is (not (child? flip bert)))
     (is (child? grandpa flip))
@@ -37,11 +38,12 @@
     (is (= (rootset [ann nancy]) (rootset (children flip))))
     (is (= (rootset [ann nancy]) (rootset (children fiona))))
     (is (= (rootset [flip]) (rootset (children grandpa))))
-    (is (= (rootset [grandpa flip ann nancy]) (rootset (vals (progeny grandpa)))))))
+    (is (= (rootset [flip ann nancy]) (rootset (vals (progeny grandpa)))))
+    (is (= (rootset [uncle nancy]) (rootset (vals (progeny weirdo)))))))
 
 (deftest build-order
   (let [p (prj/read "test-resources/grandparent/project.clj")]
-    (is (= ["grandparent" "parent" "sibling" "child"] (->> p ordered-builds (map :name))))))
+    (is (= ["parent" "sibling" "child"] (->> p ordered-builds (map :name))))))
 
 (deftest checkouts
   (let [grandpa (io/file "test-resources/grandparent/checkouts")
@@ -51,12 +53,11 @@
     (try
       (checkout-dependencies (prj/read "test-resources/grandparent/project.clj"))
       (is (not (.exists grandpa)))
-      (is (.exists dad))
+      (is (not (.exists dad)))
       (is (.exists child))
       (is (.exists (io/file child "sibling")))
       (is (.exists (io/file child "parent")))
       (is (.exists sib))
       (finally
-        (delete-file-recursively dad)
         (delete-file-recursively child)
         (delete-file-recursively sib)))))
