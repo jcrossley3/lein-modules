@@ -4,49 +4,56 @@ This plugin is the result of my desire to transform the
 [Immutant source tree](http://github.com/immutant/immutant) from a
 Maven
 [multi-module project](http://maven.apache.org/guides/mini/guide-multiple-modules.html)
-to a Leiningen one.
+to a Leiningen one. It works well for a related suite of Leiningen
+projects stored in a single SCM repository.
 
-Features include the building of child projects in dependency order,
+Features include the building of "child" projects in dependency order,
 flexible project inheritance based on Leiningen profiles, a simple
 dependency management mechanism, and automatic checkout dependencies.
 
 Minimum supported Leiningen version: 2.3.4
-
 Minimum supported Clojure version: 1.5.1
 
 ## Installation
 
-Put `[lein-modules "0.2.5"]` into the `:plugins` vector of
-your `:user` profile.
+Simply include `[lein-modules "0.3.0"]` in the `:plugins` vector of
+your Leiningen project.
 
-Installed globally, the plugin's implicit middleware will only affect
-those projects that include a `:modules` map in their project.clj.
+Installed globally, in your `:user` profile, the plugin's implicit
+middleware will only affect those projects that include a `:modules`
+map in their project.clj.
 
-But if you'd rather not install it globally, put
-`[lein-modules "0.2.5"]` into the `:plugins` vector of every
-associated module's project.clj.
+If you'd rather not install it globally, it needs to be in the
+`:plugins` vector of every associated module's project.clj.
 
 ## Usage
 
-From a parent module, use the `modules` higher-order task to build its
-"child" projects in the correct order. When you first create a project
-that has inter-dependent modules, you must install them to your local
-repo prior to running any task that may attempt to resolve them. You
-can do this easily from the root:
+From any "parent" project, use the `modules` higher-order task to
+build its "child" projects in the correct order. When you first create
+a project that has inter-dependent modules, you must install them to
+your local repo prior to running any task that may attempt to resolve
+them. You can do this easily from your root project:
 
     $ lein modules install
 
-Once installed, you can run any task you like from the root:
+Once installed, you can run any task you like, e.g.:
 
     $ lein modules test
     $ lein modules deps :tree
     $ lein modules do clean, jar
     $ lein modules analias
 
-From a child module, just use `lein` as you normally would, relying on
+Normally, the task is not applied to the project in which you run the
+`modules` task, only the child projects it finds. You can override
+this behavior by adding `"."` to the `:dirs` vector.
+
+In a child module, just use `lein` as you normally would, relying on
 the plugin's implicit middleware to 1) merge inherited profiles, and
 2) update the child's project map from its ancestors' `:versions`
-maps, both of which are described in the Configuration section below.
+maps.
+
+See the Configuration section for more details on the supported
+options.
 
 ### Checkout Dependencies
 
@@ -71,16 +78,13 @@ any of the following keys:
   the profile maps found among a project's ancestors, with the most
   immediate taking precedence, i.e. a parent profile will be applied
   after a grandparent. If found, the `:inherited` profiles will be
-  applied before the `:default` profiles, but you can override this
-  behavior by not creating any `:inherited` profiles and setting
-  `:default` to be a composite of whatever profiles make sense for
-  your project, including the default ones. This bears repeating:
-  profile inheritance occurs whether you define an `:inherited`
-  profile or not, because **all** profile maps from ancestors are
-  automatically added to the child (excluding `:user` and keywords
-  from the `:leiningen` namespace). Therefore, ancestor profiles such
-  as `:dev`, `:provided`, `:production` or `:whatever` are [un]merged
-  in the child as appropriate for the task at hand.
+  applied before the `:default` ones, but profile inheritance occurs
+  whether you define an `:inherited` profile or not, because **all**
+  profile maps from ancestors are automatically added to the child
+  (excluding `:user` and any in the `:leiningen` namespace).
+  Therefore, ancestor profiles such as `:dev`, `:provided`,
+  `:production` or `:whatever` are [un]merged in the child as
+  appropriate for the task at hand.
 
 * `:versions` - A mapping of dependency symbols to version strings. As
   a simpler alternative to Maven's dependency management, versions for
@@ -108,7 +112,7 @@ any of the following keys:
   vector is only required when your module hierarchy doesn't match
   your directory hierarchy, e.g. when a parent module is in a sibling
   directory. Regardless of this option, build order is always
-  determined by child module interdependence.
+  determined by module interdependence.
 
 * `:parent` - A string denoting the relative path to the parent
   project's directory. If unset, the value of the `:relative-path` of
@@ -140,8 +144,8 @@ will remain there. And if a mapping for the symbol can't be found, the
 version itself will be tried as a key.
 
 ```clj
-(defproject org.immutant/immutant-parent "1.0.3-SNAPSHOT"
-  :plugins [[lein-modules "0.2.5"]]
+(defproject org.immutant/immutant-suite "1.0.3-SNAPSHOT"
+  :plugins [[lein-modules "0.3.0"]]
   :packaging "pom"
 
   :profiles {:provided

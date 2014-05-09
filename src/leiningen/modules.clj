@@ -137,19 +137,22 @@ the :checkouts option:
     (let [modules (ordered-builds project)
           profiles (compress-profiles project)
           args (with-profiles profiles args)]
-      (println "------------------------------------------------------------------------")
-      (println " Module build order:")
-      (doseq [p modules]
-        (println "  " (:name p)))
-      (doseq [project modules]
-        (println "------------------------------------------------------------------------")
-        (println " Building" (:name project) (:version project) (dump-profiles args))
-        (println "------------------------------------------------------------------------")
-        (if-let [cmd (get-in project [:modules :subprocess] "lein")]
-          (binding [eval/*dir* (:root project)]
-            (let [exit-code (apply eval/sh (cons cmd args))]
-              (when (pos? exit-code)
-                (throw (ex-info "Subprocess failed" {:exit-code exit-code})))))
-          (let [project (prj/init-project project)
-                task (main/lookup-alias (first args) project)]
-            (main/apply-task task project (rest args))))))))
+      (if (empty? modules)
+        (println "No modules found")
+        (do
+          (println "------------------------------------------------------------------------")
+          (println " Module build order:")
+          (doseq [p modules]
+            (println "  " (:name p)))
+          (doseq [project modules]
+            (println "------------------------------------------------------------------------")
+            (println " Building" (:name project) (:version project) (dump-profiles args))
+            (println "------------------------------------------------------------------------")
+            (if-let [cmd (get-in project [:modules :subprocess] "lein")]
+              (binding [eval/*dir* (:root project)]
+                (let [exit-code (apply eval/sh (cons cmd args))]
+                  (when (pos? exit-code)
+                    (throw (ex-info "Subprocess failed" {:exit-code exit-code})))))
+              (let [project (prj/init-project project)
+                    task (main/lookup-alias (first args) project)]
+                (main/apply-task task project (rest args))))))))))
