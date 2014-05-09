@@ -54,10 +54,8 @@
       (checkout-dependencies (prj/read "test-resources/grandparent/project.clj"))
       (is (not (.exists grandpa)))
       (is (not (.exists dad)))
+      (is (not (.exists sib)))
       (is (.exists child))
       (is (.exists (io/file child "sibling")))
-      (is (.exists (io/file child "parent")))
-      (is (.exists sib))
       (finally
-        (delete-file-recursively child)
-        (delete-file-recursively sib)))))
+        (delete-file-recursively child)))))

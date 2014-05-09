@@ -60,7 +60,7 @@
   "Turn a progeny map (symbols to projects) into a mapping of projects
   to their dependent projects"
   [pm]
-  (let [deps (fn [p] (->> (conj (:dependencies p) [(id (parent p))])
+  (let [deps (fn [p] (->> (:dependencies p)
                       (map first)
                       (map pm)
                       (remove nil?)))]
