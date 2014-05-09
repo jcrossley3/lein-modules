@@ -11,8 +11,9 @@ Features include the building of "child" projects in dependency order,
 flexible project inheritance based on Leiningen profiles, a simple
 dependency management mechanism, and automatic checkout dependencies.
 
-Minimum supported Leiningen version: 2.3.4
-Minimum supported Clojure version: 1.5.1
+Minimum supported versions:
+* Leiningen: 2.3.4
+* Clojure: 1.5.1
 
 ## Installation
 
