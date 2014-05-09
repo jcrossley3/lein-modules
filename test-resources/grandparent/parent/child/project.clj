@@ -8,5 +8,6 @@
                  [foo/a _]
                  [foo/b _]
                  [foo/c _]
+                 [foo/d :ver]
                  [sibling "0.1.0-SNAPSHOT"]]
   :modules {:versions {parent "3.0"}})
