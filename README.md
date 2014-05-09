@@ -17,7 +17,7 @@ Minimum supported versions:
 
 ## Installation
 
-Simply include `[lein-modules "0.3.0"]` in the `:plugins` vector of
+Simply include `[lein-modules "0.3.1"]` in the `:plugins` vector of
 your Leiningen project.
 
 Installed globally, in your `:user` profile, the plugin's implicit
@@ -146,7 +146,7 @@ version itself will be tried as a key.
 
 ```clj
 (defproject org.immutant/immutant-suite "1.0.3-SNAPSHOT"
-  :plugins [[lein-modules "0.3.0"]]
+  :plugins [[lein-modules "0.3.1"]]
   :packaging "pom"
 
   :profiles {:provided
@@ -178,7 +178,7 @@ version itself will be tried as a key.
                         :immutant                     "1.0.3-SNAPSHOT"
                         :jbossas                      "7.2.x.slim.incremental.12"
 
-                        org.immutant/immutant-parent  :immutant
+                        org.immutant/immutant-web     :immutant
                         org.immutant/immutant-core    :immutant
                         org.immutant/immutant-common  :immutant
 
