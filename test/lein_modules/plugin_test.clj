@@ -17,3 +17,10 @@
          0 '[cheshire/cheshire "5.2.0"]
          1 '[org.clojure/clojure "1.5.1"]
          2 '[com.taoensso/timbre "3.1.6"])))
+
+(deftest version-keyword-should-override-group-symbol
+  (let [p (prj/read "test-resources/grandparent/parent/child/project.clj")
+        p (update-in p [:middleware] conj 'lein-modules.plugin/middleware)
+        dep (-> p prj/init-project :dependencies (nth 7))]
+    (is (= 'foo/d (first dep)))
+    (is (= "2.0" (last dep)))))

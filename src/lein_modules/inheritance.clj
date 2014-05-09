@@ -46,16 +46,11 @@
 
 (defn inherit
   "Add profiles from parents, setting any :inherited ones if found,
-  where a parent profile overrides a grandparent, guarding recursive
-  middleware calls with a metadata flag.
-  See https://github.com/technomancy/leiningen/issues/1151"
+  where a parent profile overrides a grandparent."
   [project]
-  (if (-> project meta ::modules-inherited)
-    project
-    (let [compost (compositize-profiles project)]
-      (-> (prj/add-profiles project compost)
-        (vary-meta assoc ::modules-inherited true)
-        (vary-meta update-in [:profiles] merge compost)
-        (prj/set-profiles (if (:inherited compost)
-                            [:inherited :default]
-                            [:default]))))))
+  (let [compost (compositize-profiles project)]
+    (-> (prj/add-profiles project compost)
+      (vary-meta update-in [:profiles] merge compost)
+      (prj/set-profiles (if (:inherited compost)
+                          [:inherited :default]
+                          [:default])))))

@@ -4,8 +4,14 @@
         [lein-modules.common         :only (config)]))
 
 (defn middleware
-  "Implicit Leiningen middleware"
+  "Implicit Leiningen middleware, guarding recursive
+  middleware calls with a metadata flag.
+  See https://github.com/technomancy/leiningen/issues/1151"
   [project]
-  (if (-> project config empty?)
+  (if (or (-> project config empty?)
+        (-> project meta ::middleware-applied))
     project
-    (-> project inherit versionize)))
+    (-> project
+      (vary-meta assoc ::middleware-applied true)
+      inherit
+      versionize)))
