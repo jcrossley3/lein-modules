@@ -15,3 +15,12 @@
          5 '[foo/b "2"]
          6 '[foo/c "3"]
          7 '[foo/d "2.0"])))
+
+(deftest partial-composites-should-work
+  (let [p (-> (prj/read "test-resources/lambda/project.clj")
+            versionize
+            (prj/set-profiles [:dev]))]
+    (are [d expected] (= expected (-> p :dependencies (nth d)))
+         0 '[cheshire/cheshire "5.2.0"]
+         1 '[org.immutant/immutant "1.1.1"]
+         2 '[midje/midje "1.6.3"])))

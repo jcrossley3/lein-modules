@@ -3,7 +3,8 @@
 (defproject lambda-clj version
   :description ""
   :packaging "pom"
-  :profiles {:dev {:dependencies [[midje/midje _]]}}
+  :profiles {:immutant {:dependencies [[org.immutant/immutant _]]}
+             :dev [:immutant {:dependencies [[midje/midje _]]}]}
   :dependencies [[cheshire _]]
   :modules {:inherited
             {:source-paths ["src/clj"]
@@ -16,6 +17,7 @@
                        midje/midje "1.6.3"
                        com.taoensso/timbre "3.1.6"
                        cheshire "5.2.0"
+                       immutant "1.1.1"
                        :lambda-clj "0.1.0-SNAPSHOT"
                        
                        lambda-common-module :lambda-clj
