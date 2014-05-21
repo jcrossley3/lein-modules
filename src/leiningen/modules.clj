@@ -148,7 +148,8 @@ the :checkouts option:
             (println "------------------------------------------------------------------------")
             (println " Building" (:name project) (:version project) (dump-profiles args))
             (println "------------------------------------------------------------------------")
-            (if-let [cmd (get-in project [:modules :subprocess] "lein")]
+            (if-let [cmd (get-in project [:modules :subprocess]
+                                 (or (System/getenv "LEIN_CMD") "lein"))]
               (binding [eval/*dir* (:root project)]
                 (let [exit-code (apply eval/sh (cons cmd args))]
                   (when (pos? exit-code)
