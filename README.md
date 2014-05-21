@@ -17,7 +17,7 @@ Minimum supported versions:
 
 ## Installation
 
-Simply include `[lein-modules "0.3.1"]` in the `:plugins` vector of
+Simply include `[lein-modules "0.3.2"]` in the `:plugins` vector of
 your Leiningen project.
 
 Installed globally, in your `:user` profile, the plugin's implicit
@@ -44,14 +44,16 @@ Once installed, you can run any task you like, e.g.:
     $ lein modules do clean, jar
     $ lein modules analias
 
-Normally, the task is not applied to the project in which you run the
-`modules` task, only the child projects it finds. You can override
+By default, the task is not applied to the project in which you run
+the `modules` task, only the child projects it finds. You can override
 this behavior by adding `"."` to the `:dirs` vector.
 
 In a child module, just use `lein` as you normally would, relying on
-the plugin's implicit middleware to 1) merge inherited profiles, and
-2) update the child's project map from its ancestors' `:versions`
-maps.
+the plugin's implicit middleware to:
+
+1. merge all ancestors' profiles
+2. update the child's `:dependencies` from its ancestors' `:versions`
+   maps.
 
 See the Configuration section for more details on the supported
 options.
@@ -146,7 +148,7 @@ version itself will be tried as a key.
 
 ```clj
 (defproject org.immutant/immutant-suite "1.0.3-SNAPSHOT"
-  :plugins [[lein-modules "0.3.1"]]
+  :plugins [[lein-modules "0.3.2"]]
   :packaging "pom"
 
   :profiles {:provided
