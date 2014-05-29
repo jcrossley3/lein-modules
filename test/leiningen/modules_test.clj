@@ -51,7 +51,7 @@
         child   (io/file "test-resources/grandparent/parent/child/checkouts")
         sib     (io/file "test-resources/grandparent/parent/sibling/checkouts")]
     (try
-      (checkout-dependencies (prj/read "test-resources/grandparent/project.clj"))
+      (modules (prj/read "test-resources/grandparent/project.clj") ":checkouts")
       (is (not (.exists grandpa)))
       (is (not (.exists dad)))
       (is (not (.exists sib)))
@@ -59,3 +59,11 @@
       (is (.exists (io/file child "sibling")))
       (finally
         (delete-file-recursively child)))))
+
+(deftest dirs "no sibling among modules so no checkouts"
+  (let [dad     (io/file "test-resources/grandparent/parent/checkouts")
+        child   (io/file "test-resources/grandparent/parent/child/checkouts")]
+    (modules (prj/read "test-resources/grandparent/parent/project.clj")
+      ":dirs" "child" ":checkouts")
+    (is (not (.exists dad)))
+    (is (not (.exists child)))))

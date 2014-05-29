@@ -3,7 +3,8 @@
             [leiningen.core.main :as main]
             [leiningen.core.eval :as eval]
             [leiningen.core.utils :as utils]
-            [clojure.java.io :as io])
+            [clojure.java.io :as io]
+            [clojure.string :as s])
   (:use [lein-modules.inheritance :only (inherit)]
         [lein-modules.common      :only (parent)]
         [lein-modules.compression :only (compress)]))
@@ -53,7 +54,8 @@
   "Recursively return the project's children in a map keyed by id"
   [project]
   (let [kids (children project)]
-    (apply merge (into {} (map (juxt id identity) kids))
+    (apply merge
+      (into {} (map (juxt id identity) kids))
       (map progeny (remove #(= (:root project) (:root %)) kids)))))
 
 (defn interdependence
@@ -127,13 +129,22 @@ then each of this project's child modules. For example:
   $ lein modules do clean, test
   $ lein modules analias
 
-You can create 'checkout dependencies' for all interdependent modules with
-the :checkouts option:
+You can create 'checkout dependencies' for all interdependent modules
+by including the :checkouts flag:
 
-  $ lein modules :checkouts"
+  $ lein modules :checkouts
+
+And you can limit which modules run the task with the :dirs option:
+
+  $ lein modules :dirs core,web install
+
+Delimited by either comma, colon, or semicolon, this list of relative
+paths will override the [:modules :dirs] config in project.clj"
   [project & args]
-  (if (= args [":checkouts"])
-    (checkout-dependencies project)
+  (condp = (first args)
+    ":checkouts" (do (checkout-dependencies project) (apply modules project (remove #{":checkouts"} args)))
+    ":dirs" (apply modules (assoc-in project [:modules :dirs] (s/split (second args) #"[:;,]")) (drop 2 args))
+    nil nil
     (let [modules (ordered-builds project)
           profiles (compress-profiles project)
           args (with-profiles profiles args)
