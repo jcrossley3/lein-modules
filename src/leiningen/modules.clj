@@ -136,7 +136,8 @@ the :checkouts option:
     (checkout-dependencies project)
     (let [modules (ordered-builds project)
           profiles (compress-profiles project)
-          args (with-profiles profiles args)]
+          args (with-profiles profiles args)
+          subprocess (get-in project [:modules :subprocess] (or (System/getenv "LEIN_CMD") "lein"))]
       (if (empty? modules)
         (println "No modules found")
         (do
@@ -148,8 +149,7 @@ the :checkouts option:
             (println "------------------------------------------------------------------------")
             (println " Building" (:name project) (:version project) (dump-profiles args))
             (println "------------------------------------------------------------------------")
-            (if-let [cmd (get-in project [:modules :subprocess]
-                                 (or (System/getenv "LEIN_CMD") "lein"))]
+            (if-let [cmd (get-in project [:modules :subprocess] subprocess)]
               (binding [eval/*dir* (:root project)]
                 (let [exit-code (apply eval/sh (cons cmd args))]
                   (when (pos? exit-code)
