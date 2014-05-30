@@ -37,7 +37,7 @@
   "Substitute versions in dependency vectors with actual versions from
   the :versions modules config"
   [project]
-  (let [vmap (versions project)
+  (let [vmap (merge (select-keys project [:version]) (versions project))
         f #(with-meta (for [d %] (expand-version d vmap)) (meta %))
         fd #(if-let [x (:dependencies %)] (assoc % :dependencies (f x)) %)
         ff #(into {} (for [[k v] %]
