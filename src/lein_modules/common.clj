@@ -2,7 +2,7 @@
   (:require [leiningen.core.project :as prj]
             [clojure.java.io :as io]))
 
-(def read-project (memoize prj/read))
+(def read-project prj/read)
 
 (defn parent
   "Return the project's parent project"
