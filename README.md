@@ -89,7 +89,7 @@ Important differences:
   `:subprocess` is set to false. See details below.
 * lein-modules supports automatic discovery of child modules so that
   you don't have to set `:dirs` at all
-* The version management feature of lein-modules eliminates the
+* The dependency management feature of lein-modules eliminates the
   redundant references to your project's current version within the
   `:dependencies` vector of interdependent modules, enabling a simpler
   release process
@@ -137,10 +137,10 @@ any of the following keys:
     4. the group id
 
   The first non-nil value is returned, otherwise the dependency's
-  version is returned. The project map's `:version` is automatically
-  included in the map, so your interdependent modules may use this.
-  This allows you to concisely maintain the versions of your child
-  modules' shared dependencies in a single place. And like the
+  version is returned. The *project* map's `:version` is automatically
+  included in the `:versions` map, so your interdependent modules may
+  use this. This allows you to concisely maintain the versions of your
+  child modules' shared dependencies in a single place. And like the
   `:inherited` profile, when multiple `:versions` maps are found among
   ancestors, the most immediate take precedence.
 
