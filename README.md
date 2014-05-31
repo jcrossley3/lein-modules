@@ -65,7 +65,36 @@ Run the following command to automatically create
 for each related module:
 
     $ lein modules :checkouts
-    
+
+### Migrating from lein-sub
+
+The `modules` task is similar to the `sub` task from the
+[lein-sub](https://github.com/kumarshantanu/lein-sub) plugin. Consider
+the following lein-sub configuration:
+
+    :sub ["module/common" "module/web" "module/cli"]
+
+The equivalent lein-modules configuration:
+
+    :modules {:dirs ["module/common" "module/web" "module/cli"]
+              :subprocess false}
+
+Important differences:
+* lein-sub builds the modules in the order you specify, but
+  lein-modules always builds them in dependency order
+* lein-sub always runs the tasks for each module in the same Leiningen
+  process, while lein-modules spawns a new process for each *unless*
+  `:subprocess` is set to false. See details below.
+* Both support a command-line option to specify in which modules tasks
+  are run, e.g.
+
+    $ lein sub -s "foo:bar" jar
+    $ lein modules :dirs "foo:bar" jar
+
+If you don't require the dependency version management and project
+inheritance features of lein-modules, lein-sub is an excellent
+alternative.
+
 ## Configuration
 
 The `modules` task will attempt to discover child projects
