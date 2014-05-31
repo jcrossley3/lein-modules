@@ -88,8 +88,10 @@ Important differences:
 * Both support a command-line option to specify in which modules tasks
   are run, e.g.
 
+```
     $ lein sub -s "foo:bar" jar
     $ lein modules :dirs "foo:bar" jar
+```
 
 If you don't require the dependency version management and project
 inheritance features of lein-modules, lein-sub is an excellent
