@@ -102,10 +102,12 @@ any of the following keys:
     4. the group id
 
   The first non-nil value is returned, otherwise the dependency's
-  version is returned. This allows you to concisely maintain the
-  versions of your child modules' shared dependencies in a single
-  place. And like the `:inherited` profile, when multiple `:versions`
-  maps are found among ancestors, the most immediate take precedence.
+  version is returned. The project map's `:version` is automatically
+  included in the map, so your interdependent modules may use this.
+  This allows you to concisely maintain the versions of your child
+  modules' shared dependencies in a single place. And like the
+  `:inherited` profile, when multiple `:versions` maps are found among
+  ancestors, the most immediate take precedence.
 
 * `:dirs` - A vector of strings denoting the relative paths to the
   project's child modules. Normally, they're discovered automatically
@@ -177,7 +179,7 @@ version itself will be tried as a key.
                         leiningen-core                "2.3.4"
                         midje                         "1.6.0"
 
-                        :immutant                     "1.0.3-SNAPSHOT"
+                        :immutant                     :version
                         :jbossas                      "7.2.x.slim.incremental.12"
 
                         org.immutant/immutant-web     :immutant
