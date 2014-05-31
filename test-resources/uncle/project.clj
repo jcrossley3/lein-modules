@@ -3,4 +3,5 @@
 
   :profiles {:dev {:foo [:dev]}
              :provided {:foo [:provided]}
-             :dist {:foo [:dist]}}  )
+             :dist {:foo [:dist]}
+             :weirdo {:modules {:dirs ["." "../grandparent/parent/sibling"]}}})

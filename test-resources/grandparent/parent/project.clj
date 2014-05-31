@@ -9,4 +9,6 @@
                        x/x  "1.1.1"
                        a "1"
                        foo "2"
-                       c "1"}})
+                       c "1"}}
+  :profiles {:by-parent {:modules {:dirs ["sibling"]}}
+             :by-child  {}})

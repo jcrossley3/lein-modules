@@ -29,20 +29,18 @@
     dir))
 
 (defn children
-  "Return the child maps for a project with the same active profiles"
+  "Return the child maps for a project according to its active profiles"
   [project]
-  (let [profiles (compress-profiles project)]
-    (map #(prj/set-profiles (inherit %) profiles)
-      (if-let [dirs (-> project :modules :dirs)]
-        (map (comp prj/read
-               (memfn getCanonicalPath)
-               #(io/file (:root project) % "project.clj"))
-          dirs)
-        (->> (file-seq-sans-symlinks (io/file (:root project)))
-          (filter #(= "project.clj" (.getName %)))
-          (remove #(= (:root project) (.getParent %)))
-          (map (comp #(try (prj/read %) (catch Exception _)) str))
-          (filter (partial child? project)))))))
+  (if-let [dirs (-> project :modules :dirs)]
+    (map (comp prj/read (memfn getCanonicalPath)
+           #(io/file (:root project) % "project.clj"))
+      dirs)
+    (->> (file-seq-sans-symlinks (io/file (:root project)))
+      (filter #(= "project.clj" (.getName %)))
+      (remove #(= (:root project) (.getParent %)))
+      (map (comp #(try (prj/read %) (catch Exception _)) str))
+      (remove nil?)
+      (filter #(child? project (prj/set-profiles (inherit %) (compress-profiles project)))))))
 
 (defn id
   "Returns fully-qualified symbol identifier for project"
@@ -56,7 +54,9 @@
   (let [kids (children project)]
     (apply merge
       (into {} (map (juxt id identity) kids))
-      (map progeny (remove #(= (:root project) (:root %)) kids)))))
+      (->> kids
+        (remove #(= (:root project) (:root %)))
+        (map progeny)))))
 
 (defn interdependence
   "Turn a progeny map (symbols to projects) into a mapping of projects
@@ -138,13 +138,20 @@ And you can limit which modules run the task with the :dirs option:
 
   $ lein modules :dirs core,web install
 
-Delimited by either comma, colon, or semicolon, this list of relative
-paths will override the [:modules :dirs] config in project.clj"
+Delimited by either comma or colon, this list of relative paths
+will override the [:modules :dirs] config in project.clj"
   [project & args]
   (condp = (first args)
-    ":checkouts" (do (checkout-dependencies project) (apply modules project (remove #{":checkouts"} args)))
-    ":dirs" (apply modules (assoc-in project [:modules :dirs] (s/split (second args) #"[:;,]")) (drop 2 args))
-    nil nil
+    ":checkouts" (do
+                   (checkout-dependencies project)
+                   (apply modules project (remove #{":checkouts"} args)))
+    ":dirs" (let [dirs (s/split (second args) #"[:,]")]
+              (apply modules
+                (-> project
+                  (assoc-in [:modules :dirs] dirs)
+                  (vary-meta assoc-in [:without-profiles :modules :dirs] dirs))
+                (drop 2 args)))
+    nil nil                             ; do nothing if no task passed
     (let [modules (ordered-builds project)
           profiles (compress-profiles project)
           args (with-profiles profiles args)

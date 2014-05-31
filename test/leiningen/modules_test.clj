@@ -27,7 +27,7 @@
         fiona   (prj/read "test-resources/stepmom/project.clj")
         grandpa (prj/read "test-resources/grandparent/project.clj")
         uncle   (prj/read "test-resources/uncle/project.clj")
-        weirdo  (update-in uncle [:modules :dirs] conj "." "../grandparent/parent/sibling")]
+        weirdo  (prj/set-profiles uncle [:weirdo])]
     (is (child? flip ann))
     (is (not (child? flip bert)))
     (is (child? grandpa flip))
@@ -40,6 +40,12 @@
     (is (= (rootset [flip]) (rootset (children grandpa))))
     (is (= (rootset [flip ann nancy]) (rootset (vals (progeny grandpa)))))
     (is (= (rootset [uncle nancy]) (rootset (vals (progeny weirdo)))))))
+
+(deftest profiled-children
+  (let [p (prj/read "test-resources/grandparent/parent/project.clj")]
+    (is (= #{"child" "sibling"}   (set (map :name (vals (progeny p))))))
+    (is (= #{"sibling"}           (set (map :name (vals (progeny (prj/set-profiles p [:by-parent])))))))
+    (is (= #{"child" "stepchild"} (set (map :name (vals (progeny (prj/set-profiles p [:by-child])))))))))
 
 (deftest build-order
   (let [p (prj/read "test-resources/grandparent/project.clj")]
