@@ -80,11 +80,14 @@ The equivalent lein-modules configuration:
               :subprocess false}
 
 Important differences:
-* lein-sub builds the modules in the order you specify, but
-  lein-modules always builds them in dependency order
+* lein-sub builds the modules in the order listed in the `:sub`
+  vector, but lein-modules always builds them in dependency order,
+  regardless of the order of the `:dirs` vector
 * lein-sub always runs the tasks for each module in the same Leiningen
   process, while lein-modules spawns a new process for each *unless*
   `:subprocess` is set to false. See details below.
+* lein-modules supports automatic discovery of child modules so that
+  you don't have to set `:dirs` at all
 * Both support a command-line option to specify in which modules tasks
   are run, e.g.
 
