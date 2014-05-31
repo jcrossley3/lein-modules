@@ -20,6 +20,13 @@
     (-> project meta :included-profiles distinct)
     (-> project meta :profiles)))
 
+(defn with-profiles-of
+  "Apply the same profiles to tgt project included in src project"
+  [src tgt]
+  (let [project (inherit tgt)
+        profiles (filter (set (compress-profiles src)) (-> project meta :profiles keys))]
+    (prj/set-profiles project profiles)))
+
 (defn file-seq-sans-symlinks
   "A tree seq on java.io.Files that aren't symlinks"
   [dir]
@@ -40,7 +47,7 @@
       (remove #(= (:root project) (.getParent %)))
       (map (comp #(try (prj/read %) (catch Exception _)) str))
       (remove nil?)
-      (filter #(child? project (prj/set-profiles (inherit %) (compress-profiles project)))))))
+      (filter #(child? project (with-profiles-of project %))))))
 
 (defn id
   "Returns fully-qualified symbol identifier for project"
@@ -55,7 +62,7 @@
     (apply merge
       (into {} (map (juxt id identity) kids))
       (->> kids
-        (remove #(= (:root project) (:root %)))
+        (remove #(= (:root project) (:root %))) ; in case "." in :dirs
         (map progeny)))))
 
 (defn interdependence
