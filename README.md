@@ -1,15 +1,22 @@
 # lein-modules [![Build Status](https://travis-ci.org/jcrossley3/lein-modules.png?branch=master)](https://travis-ci.org/jcrossley3/lein-modules)
 
-This plugin is the result of my desire to transform the
-[Immutant source tree](http://github.com/immutant/immutant) from a
-Maven
-[multi-module project](http://maven.apache.org/guides/mini/guide-multiple-modules.html)
-to a Leiningen one. It works well for a related suite of Leiningen
-projects stored in a single SCM repository.
+* [Installation](#installation)
+* [Usage](#usage)
+    * [Checkout dependencies](#checkout-dependencies)
+    * [Comparison to lein-sub](#comparison-to-lein-sub)
+* [Configuration](#configuration)
+* [Example](#example)
 
-Features include the building of "child" projects in dependency order,
-flexible project inheritance based on Leiningen profiles, a simple
-dependency management mechanism, and automatic checkout dependencies.
+This [Leiningen](https://github.com/technomancy/leiningen) plugin
+provides the benefits of Maven
+[multi-module projects](http://maven.apache.org/guides/mini/guide-multiple-modules.html)
+without setting your hair on fire. It works well for a related suite
+of Leiningen projects stored in a single SCM repository.
+
+Features include the building of automatically-discovered "child"
+projects in dependency order, flexible project inheritance based on
+Leiningen profiles, a simple dependency management mechanism, and
+automatic checkout dependencies.
 
 Minimum supported versions:
 * Leiningen: 2.3.4
@@ -20,9 +27,10 @@ Minimum supported versions:
 Simply include `[lein-modules "0.3.4"]` in the `:plugins` vector of
 your Leiningen project.
 
-Installed globally, in your `:user` profile, the plugin's implicit
-middleware will only affect those projects that include a `:modules`
-map in their project.clj.
+Installing it globally in your `:user` profile makes the `modules`
+higher-order task available to any project, but the plugin's implicit
+middleware will only affect those projects with a `:modules` map in
+their project.clj.
 
 If you'd rather not install it globally, it needs to be in the
 `:plugins` vector of every associated module's project.clj.
@@ -68,7 +76,7 @@ for each related module:
 
 ### Comparison to lein-sub
 
-The `modules` task is similar to the `sub` task from the
+The `modules` task is feature-compatible with the `sub` task from the
 [lein-sub](https://github.com/kumarshantanu/lein-sub) plugin.
 
 Consider the following lein-sub configuration:
@@ -86,13 +94,13 @@ Important differences:
   regardless of the order of the `:dirs` vector
 * lein-sub runs the tasks for each module in the same Leiningen
   process, while lein-modules spawns a new process for each *unless*
-  `:subprocess` is set to false. See details below.
+  `:subprocess` is set to false
 * lein-modules supports automatic discovery of child modules so that
   you don't have to set `:dirs` at all
-* The dependency management feature of lein-modules eliminates the
-  redundant references to your project's current version within the
-  `:dependencies` vector of interdependent modules, enabling a simpler
-  release process
+* lein-modules eliminates the redundant references to your project's
+  current version in interdependent modules, e.g.
+  `[:dependencies [[your-project/common :version]]`, resolving the
+  `:version` keyword to the value from the dependent's own project map
 * Both support a command-line option to specify in which modules tasks
   are run, e.g.
 
