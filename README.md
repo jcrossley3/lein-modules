@@ -1,13 +1,5 @@
 # lein-modules [![Build Status](https://travis-ci.org/jcrossley3/lein-modules.png?branch=master)](https://travis-ci.org/jcrossley3/lein-modules)
 
-* [Installation](#installation)
-* [Usage](#usage)
-    * [Checkout dependencies](#checkout-dependencies)
-    * [Comparison to lein-sub](#comparison-to-lein-sub)
-    * [Releasing](#releasing)
-* [Configuration](#configuration)
-* [Example](#example)
-
 This [Leiningen](https://github.com/technomancy/leiningen) plugin
 provides the benefits of Maven
 [multi-module projects](http://maven.apache.org/guides/mini/guide-multiple-modules.html)
@@ -22,6 +14,15 @@ automatic checkout dependencies.
 Minimum supported versions:
 * Leiningen: 2.3.4
 * Clojure: 1.5.1
+
+Contents:
+* [Installation](#installation)
+* [Usage](#usage)
+    * [Checkout dependencies](#checkout-dependencies)
+    * [Comparison to lein-sub](#comparison-to-lein-sub)
+    * [Releasing](#releasing)
+* [Configuration](#configuration)
+* [Example](#example)
 
 ## Installation
 
