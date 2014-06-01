@@ -4,6 +4,7 @@
 * [Usage](#usage)
     * [Checkout dependencies](#checkout-dependencies)
     * [Comparison to lein-sub](#comparison-to-lein-sub)
+    * [Releasing](#releasing)
 * [Configuration](#configuration)
 * [Example](#example)
 
@@ -63,8 +64,8 @@ the plugin's implicit middleware to:
 2. update the child's `:dependencies` from its ancestors' `:versions`
    maps.
 
-See the Configuration section for more details on the supported
-options.
+See the [Configuration](#configuration) section for more details on
+the supported options.
 
 ### Checkout Dependencies
 
@@ -88,7 +89,12 @@ And the equivalent lein-modules configuration:
     :modules {:dirs ["module/common" "module/web" "module/cli"]
               :subprocess false}
 
-Important differences:
+Usage for both tasks is similar:
+
+    $ lein sub install
+    $ lein modules install
+
+But there are some important differences:
 * lein-sub builds the modules in the order listed in the `:sub`
   vector, but lein-modules always builds them in dependency order,
   regardless of the order of the `:dirs` vector
@@ -108,6 +114,45 @@ Important differences:
     $ lein sub -s "foo:bar" jar
     $ lein modules :dirs "foo:bar" jar
 ```
+
+### Releasing
+
+Leiningen 2.4.0 provides a
+[new release task](https://github.com/technomancy/leiningen/blob/master/doc/DEPLOY.md#releasing-simplified).
+To use it with lein-modules, some configuration of its
+`:release-tasks` vector is required.
+
+Invoking `lein modules release` isn't feasible because all the modules
+reside in the same repo. Only the first would succeed and subsequent
+modules would error due to the release tag already existing. The
+version in each modules' project.clj must be changed before committing
+and tagging the release. So instead of `lein modules release`, we run
+`lein release` in the parent project and adjust its `:release-tasks`
+to prepend "modules" to the "change" and "deploy" steps:
+
+```clj
+(defproject your-project "0.1.0-SNAPSHOT"
+  ...
+  :modules {:subprocess false
+            :inherited {:deploy-repositories
+                        [["releases" {:url "https://clojars.org/repo/" :creds :gpg}]]}}
+  :release-tasks [["vcs" "assert-committed"]
+                  ["modules" "change" "version" "leiningen.release/bump-version" "release"]
+                  ["vcs" "commit"]
+                  ["vcs" "tag"]
+                  ["modules" "deploy"]
+                  ["modules" "change" "version" "leiningen.release/bump-version"]
+                  ["vcs" "commit"]
+                  ["vcs" "push"]])
+```
+Note the `:modules` map.
+
+We set `:subprocess` to false because the release task binds a dynamic
+variable to the value of its optional `level` argument that will be
+lost in a new subprocess.
+
+We also take advantage of the `:inherited` profile so we don't have to
+redundantly configure the "releases" repo in every child module.
 
 ## Configuration
 
@@ -145,12 +190,13 @@ any of the following keys:
     4. the group id
 
   The first non-nil value is returned, otherwise the dependency's
-  version is returned. The *project* map's `:version` is automatically
-  included in the `:versions` map, so your interdependent modules may
-  use this. This allows you to concisely maintain the versions of your
-  child modules' shared dependencies in a single place. And like the
-  `:inherited` profile, when multiple `:versions` maps are found among
-  ancestors, the most immediate take precedence.
+  version is returned. This allows you to concisely maintain the
+  versions of your child modules' shared dependencies in a single
+  place. And like the `:inherited` profile, when multiple `:versions`
+  maps are found among ancestors, the most immediate take precedence.
+  The *project* map's `:version` is automatically included in the
+  `:versions` map, so your interdependent modules may use that without
+  configuring this option at all.
 
 * `:dirs` - A vector of strings denoting the relative paths to the
   project's child modules. Normally, they're discovered automatically
@@ -221,15 +267,9 @@ version itself will be tried as a key.
              :versions {org.clojure/clojure           "1.5.1"
                         leiningen-core                "2.3.4"
                         midje                         "1.6.0"
-
-                        :immutant                     :version
                         :jbossas                      "7.2.x.slim.incremental.12"
-
-                        org.immutant/immutant-web     :immutant
-                        org.immutant/immutant-core    :immutant
-                        org.immutant/immutant-common  :immutant
-
-                        org.jboss.as                  :jbossas}})
+                        org.jboss.as                  :jbossas
+                        org.immutant                  :version}})
 ```
 
 ## License
