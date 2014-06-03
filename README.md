@@ -13,11 +13,13 @@ automatic checkout dependencies.
 
 * [Installation](#installation)
 * [Usage](#usage)
-    * [Checkout dependencies](#checkout-dependencies)
+    * [Checkout Dependencies](#checkout-dependencies)
     * [Comparison to lein-sub](#comparison-to-lein-sub)
-    * [Releasing](#release-management)
+    * [Release Management](#release-management)
 * [Configuration](#configuration)
 * [Example](#example)
+    * [Parent](#parent)
+    * [Child](#child)
 
 ## Installation
 
@@ -236,18 +238,17 @@ if a version is found in `:versions`. Otherwise, whatever is there
 will remain there. And if a mapping for the symbol can't be found, the
 version itself will be tried as a key.
 
+### Parent
 ```clj
 (defproject org.immutant/immutant-suite "1.0.3-SNAPSHOT"
   :plugins [[lein-modules "0.3.4"]]
-  :packaging "pom"
 
   :profiles {:provided
                {:dependencies [[org.clojure/clojure "_"]
                                [org.jboss.as/jboss-as-server "_"]
                                [org.jboss.as/jboss-as-web :jbossas]]}
              :dev
-               {:dependencies [[midje "_"]
-                               [ring/ring-devel "1.2.1"]]}
+               {:dependencies [[midje "_"]]}
              :dist
                {:modules {:dirs ["../dist"]}}
 
@@ -255,20 +256,36 @@ version itself will be tried as a key.
                {:modules {:subprocess false}}}
 
   :modules  {:inherited
-               {:repositories [["project:odd upstream"
+               {:deploy-repositories
+                              [["releases" {:url "https://clojars.org/repo/" :creds :gpg}]]
+                :repositories [["project:odd upstream"
                                 "http://repository-projectodd.forge.cloudbees.com/upstream"]]
-                :source-paths       ["src/main/clojure"]
-                :test-paths         ["src/test/clojure"]
-                :java-source-paths  ["src/main/java"]
-                :aliases            {"all" ^:displace ["do" "clean," "test," "install"]
-                                     "-f" ["with-profile" "+fast"]}}
+                :aliases      {"all" ^:displace ["do" "clean," "test," "install"]
+                               "-f" ["with-profile" "+fast"]}}
+                :mailing-list {:name "Immutant users list"
+                               :post "immutant-users@immutant.org"}
+                :url          "http://immutant.org"
+                :scm          {:dir ".."}
+                :license      {:name "Apache Software License - v 2.0"
+                               :url "http://www.apache.org/licenses/LICENSE-2.0"}
 
              :versions {org.clojure/clojure           "1.5.1"
                         leiningen-core                "2.3.4"
                         midje                         "1.6.0"
+                        ring                          "1.2.1"
                         :jbossas                      "7.2.x.slim.incremental.12"
                         org.jboss.as                  :jbossas
                         org.immutant                  :version}})
+```
+
+### Child
+```clj
+(defproject org.immutant/web "1.0.3-SNAPSHOT"
+  :plugins [[lein-modules "0.3.4"]]
+  :description "The web component"
+  :dependencies [[org.immutant/core :version]
+                 [ring/ring-servlet "_"]
+                 [potemkin "0.3.4"]])
 ```
 
 ## License
