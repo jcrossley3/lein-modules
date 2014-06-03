@@ -11,16 +11,11 @@ projects in dependency order, flexible project inheritance based on
 Leiningen profiles, a simple dependency management mechanism, and
 automatic checkout dependencies.
 
-Minimum supported versions:
-* Leiningen: 2.3.4
-* Clojure: 1.5.1
-
-Contents:
 * [Installation](#installation)
 * [Usage](#usage)
     * [Checkout dependencies](#checkout-dependencies)
     * [Comparison to lein-sub](#comparison-to-lein-sub)
-    * [Releasing](#releasing)
+    * [Releasing](#release-management)
 * [Configuration](#configuration)
 * [Example](#example)
 
@@ -36,6 +31,10 @@ their project.clj.
 
 If you'd rather not install it globally, it needs to be in the
 `:plugins` vector of every associated module's project.clj.
+
+Minimum supported versions:
+* Leiningen: 2.3.4
+* Clojure: 1.5.1
 
 ## Usage
 
@@ -78,8 +77,10 @@ for each related module:
 
 ### Comparison to lein-sub
 
-The `modules` task is feature-compatible with the `sub` task from the
-[lein-sub](https://github.com/kumarshantanu/lein-sub) plugin.
+Both lein-modules and
+[lein-sub](https://github.com/kumarshantanu/lein-sub) support project
+aggregation. The `modules` task is feature-compatible with the `sub`
+task.
 
 Consider the following lein-sub configuration:
 
@@ -93,30 +94,27 @@ And the equivalent lein-modules configuration:
 Usage for both tasks is similar:
 
     $ lein sub install
+    $ lein sub -s "foo:bar" jar
+
     $ lein modules install
+    $ lein modules :dirs "foo:bar" jar
 
 But there are some important differences:
 * lein-sub builds the modules in the order listed in the `:sub`
   vector, but lein-modules always builds them in dependency order,
-  regardless of the order of the `:dirs` vector
+  regardless of the order of its `:dirs` vector
 * lein-sub runs the tasks for each module in the same Leiningen
   process, while lein-modules spawns a new process for each *unless*
   `:subprocess` is set to false
 * lein-modules supports automatic discovery of child modules so that
   you don't have to set `:dirs` at all
-* lein-modules eliminates the redundant references to your project's
-  current version in interdependent modules, e.g.
+* lein-modules simplifies your release process by eliminating the
+  redundant references to your project's current version in
+  interdependent modules, e.g.
   `[:dependencies [[your-project/common :version]]`, resolving the
   `:version` keyword to the value from the dependent's own project map
-* Both support a command-line option to specify in which modules tasks
-  are run, e.g.
 
-```
-    $ lein sub -s "foo:bar" jar
-    $ lein modules :dirs "foo:bar" jar
-```
-
-### Releasing
+### Release Management
 
 Leiningen 2.4.0 provides a
 [new release task](https://github.com/technomancy/leiningen/blob/master/doc/DEPLOY.md#releasing-simplified).
