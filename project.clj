@@ -6,6 +6,17 @@
   :eval-in-leiningen true
   :aliases {"all" ["do" "clean," "test," "install"]}
   :signing {:gpg-key "92439EF5"}
-  :lein-release {:deploy-via :clojars}
-  :plugins [[lein-set-version "0.4.1"]]
-  :set-version {:updates [{:path "README.md" :no-snapshot true}]})
+  :plugins [[lein-file-replace "0.1.0"]]
+  :deploy-repositories {"releases" :clojars}
+  :release-tasks
+  [["vcs" "assert-committed"]
+   ["change" "version" "leiningen.release/bump-version" "release"]
+
+   ["file-replace" "README.md" "lein-modules \"" "\"]" "version"]
+
+   ["vcs" "commit"]
+   ["vcs" "tag"]
+   ["deploy"]
+   ["change" "version" "leiningen.release/bump-version"]
+   ["vcs" "commit"]
+   ["vcs" "push"]])
