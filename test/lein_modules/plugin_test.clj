@@ -19,8 +19,9 @@
          2 '[com.taoensso/timbre "3.1.6"])))
 
 (deftest version-keyword-should-override-group-symbol
-  (let [p (prj/read "test-resources/grandparent/parent/child/project.clj")
-        p (update-in p [:middleware] conj 'lein-modules.plugin/middleware)
+  (let [p (-> (prj/read "test-resources/grandparent/parent/child/project.clj")
+            (update-in [:middleware] conj 'lein-modules.plugin/middleware)
+            (vary-meta update-in [:without-profiles :middleware] conj 'lein-modules.plugin/middleware))
         dep (-> p prj/init-project :dependencies (nth 7))]
     (is (= 'foo/d (first dep)))
     (is (= "2.0" (last dep)))))
