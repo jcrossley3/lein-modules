@@ -18,9 +18,11 @@
 
 (deftest partial-composites-should-work
   (let [p (-> (prj/read "test-resources/lambda/project.clj")
-            versionize
-            (prj/set-profiles [:dev]))]
-    (are [d expected] (= expected (-> p :dependencies (nth d)))
-         0 '[cheshire/cheshire "5.2.0"]
-         1 '[org.immutant/immutant "1.1.1"]
-         2 '[midje/midje "1.6.3"])))
+            (prj/set-profiles [:dev]))
+        deps (into {} (->> p :dependencies (map (juxt first second))))]
+    (are [d expected] (= expected (get deps d))
+         'cheshire/cheshire     "5.2.0"
+         'org.immutant/immutant "1.1.1"
+         'midje/midje           "1.6.3"
+         'org.clojure/clojure   "1.5.1"
+         'com.taoensso/timbre   "3.1.6")))

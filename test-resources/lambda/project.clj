@@ -3,6 +3,7 @@
 (defproject lambda-clj version
   :description ""
   :packaging "pom"
+  :middleware [lein-modules.plugin/middleware]
   :profiles {:immutant {:dependencies [[org.immutant/immutant _]]}
              :dev [:immutant {:dependencies [[midje/midje _]]}]}
   :dependencies [[cheshire _]]

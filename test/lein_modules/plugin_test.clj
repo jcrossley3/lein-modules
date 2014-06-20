@@ -11,7 +11,6 @@
 
 (deftest unmerge-should-retain-versions
   (let [p (-> (prj/read "test-resources/lambda/project.clj")
-            middleware
             (prj/unmerge-profiles [:default]))]
     (are [d expected] (= expected (-> p :dependencies (nth d)))
          0 '[cheshire/cheshire "5.2.0"]
