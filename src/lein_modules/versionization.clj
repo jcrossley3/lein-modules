@@ -1,6 +1,6 @@
 (ns lein-modules.versionization
   (:use [lein-modules.common :only (config)]
-        [leiningen.core.project :only (artifact-map composite-profile?)]))
+        [leiningen.core.project :only (artifact-map)]))
 
 (defn versions
   "Merge dependency management maps of :versions from the
@@ -38,15 +38,7 @@
   the :versions modules config"
   [project]
   (let [vmap (merge (select-keys project [:version]) (versions project))
-        f #(with-meta (for [d %] (expand-version d vmap)) (meta %))
-        fd #(if-let [x (:dependencies %)] (assoc % :dependencies (f x)) %)
-        ff #(into {} (for [[k v] %]
-                       (if (composite-profile? v)
-                         [k (vec (map fd v))]
-                         [k (fd v)])))]
+        f #(with-meta (for [d %] (expand-version d vmap)) (meta %))]
     (-> project
       (update-in [:dependencies] f)
-      (update-in [:parent] expand-version vmap)
-      (update-in [:profiles] ff)
-      (vary-meta update-in [:without-profiles :dependencies] f)
-      (vary-meta update-in [:profiles] ff))))
+      (update-in [:parent] expand-version vmap))))

@@ -14,4 +14,5 @@
     (-> project
       (vary-meta assoc ::middleware-applied true)
       inherit
-      versionize)))
+      versionize
+      (vary-meta dissoc ::middleware-applied))))
