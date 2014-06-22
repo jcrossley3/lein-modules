@@ -1,5 +1,6 @@
 (ns lein-modules.inheritance
-  (:use [lein-modules.common :only (config parent)])
+  (:use [lein-modules.common :only (config parent)]
+        [lein-modules.compression :only (compressed-profiles)])
   (:require [leiningen.core.project :as prj]))
 
 (def normalizer (partial map (comp prj/dependency-vec prj/dependency-map)))
@@ -26,10 +27,12 @@
    profiles are simply concatenated"
   [project]
   (fn [m [k v]]
-    (if (prj/composite-profile? v)
-      (update-in m [k] (comp vec distinct concat) v)
-      (let [n (keyword (format "%s%s-%s" (or (namespace k) "") (name k) (:name project)))]
-        (assoc (update-in m [k] #(vec (cons n %))) n (normalize-deps v))))))
+    (cond
+      (prj/composite-profile? v) (update-in m [k] (comp vec distinct concat) v)
+      (-> v meta ::composited) (assoc m k v)
+      :else (let [n (keyword (format "%s%s-%s" (or (namespace k) "") (name k) (:name project)))]
+              (assoc (update-in m [k] #(vec (cons n %)))
+                n (vary-meta (normalize-deps v) assoc ::composited true))))))
 
 (defn compositize-profiles
   "Return a profile map containing all the profiles found in the
@@ -48,9 +51,10 @@
   "Add profiles from parents, setting any :inherited ones if found,
   where a parent profile overrides a grandparent."
   [project]
-  (let [compost (compositize-profiles project)]
+  (let [current (compressed-profiles project)
+        compost (compositize-profiles project)]
     (-> (prj/add-profiles project compost)
       (vary-meta update-in [:profiles] merge compost)
       (prj/set-profiles (if (:inherited compost)
-                          [:inherited :default]
-                          [:default])))))
+                          (cons :inherited current)
+                          current)))))

@@ -47,6 +47,12 @@
     (is (= #{"sibling"}           (set (map :name (vals (progeny (prj/set-profiles p [:by-parent])))))))
     (is (= #{"child" "stepchild"} (set (map :name (vals (progeny (prj/set-profiles p [:by-child])))))))))
 
+(deftest profiled-parents
+  (let [p (prj/read "test-resources/grandparent/parent/stepchild/project.clj")]
+    (is (nil? (parent p)))
+    (is (= "parent" (-> (prj/set-profiles p [:by-child]) parent :name)))
+    (is (= "stepmom" (-> (prj/set-profiles p [:by-child]) parent parent :name)))))
+
 (deftest build-order
   (let [p (prj/read "test-resources/grandparent/project.clj")]
     (is (= ["parent" "sibling" "child"] (->> p ordered-builds (map :name))))))

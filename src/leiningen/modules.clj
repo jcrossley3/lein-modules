@@ -6,26 +6,13 @@
             [clojure.java.io :as io]
             [clojure.string :as s])
   (:use [lein-modules.inheritance :only (inherit)]
-        [lein-modules.common      :only (parent)]
-        [lein-modules.compression :only (compress)]))
+        [lein-modules.common      :only (parent with-profiles)]
+        [lein-modules.compression :only (compressed-profiles)]))
 
 (defn child?
   "Return true if child is an immediate descendant of project"
   [project child]
   (= (:root project) (:root (parent child))))
-
-(defn compress-profiles
-  [project]
-  (compress
-    (-> project meta :included-profiles distinct)
-    (-> project meta :profiles)))
-
-(defn with-profiles-of
-  "Apply the same profiles to tgt project included in src project"
-  [src tgt]
-  (let [project (inherit tgt)
-        profiles (filter (set (compress-profiles src)) (-> project meta :profiles keys))]
-    (prj/set-profiles project profiles)))
 
 (defn file-seq-sans-symlinks
   "A tree seq on java.io.Files that aren't symlinks"
@@ -39,15 +26,17 @@
   "Return the child maps for a project according to its active profiles"
   [project]
   (if-let [dirs (-> project :modules :dirs)]
-    (map (comp prj/read (memfn getCanonicalPath)
-           #(io/file (:root project) % "project.clj"))
-      dirs)
+    (remove nil?
+      (map (comp #(try (prj/read %) (catch Exception e (println (.getMessage e))))
+             (memfn getCanonicalPath)
+             #(io/file (:root project) % "project.clj"))
+        dirs))
     (->> (file-seq-sans-symlinks (io/file (:root project)))
       (filter #(= "project.clj" (.getName %)))
       (remove #(= (:root project) (.getParent %)))
       (map (comp #(try (prj/read %) (catch Exception _)) str))
       (remove nil?)
-      (filter #(child? project (with-profiles-of project %))))))
+      (filter #(child? project (with-profiles % (compressed-profiles project)))))))
 
 (defn id
   "Returns fully-qualified symbol identifier for project"
@@ -57,13 +46,15 @@
 
 (defn progeny
   "Recursively return the project's children in a map keyed by id"
-  [project]
-  (let [kids (children project)]
-    (apply merge
-      (into {} (map (juxt id identity) kids))
-      (->> kids
-        (remove #(= (:root project) (:root %))) ; in case "." in :dirs
-        (map progeny)))))
+  ([project]
+     (progeny project (compressed-profiles project)))
+  ([project profiles]
+     (let [kids (children (with-profiles project profiles))]
+       (apply merge
+         (into {} (map (juxt id identity) kids))
+         (->> kids
+           (remove #(= (:root project) (:root %))) ; in case "." in :dirs
+           (map #(progeny % profiles)))))))
 
 (defn interdependence
   "Turn a progeny map (symbols to projects) into a mapping of projects
@@ -106,7 +97,7 @@
   "Setup checkouts/ for a project and its interdependent children"
   (comp create-checkouts interdependence progeny))
 
-(defn with-profiles
+(defn cli-with-profiles
   "Set the profiles in the args unless some are already there"
   [profiles args]
   (if (some #{"with-profile" "with-profiles"} args)
@@ -160,8 +151,8 @@ will override the [:modules :dirs] config in project.clj"
                 (drop 2 args)))
     nil nil                             ; do nothing if no task passed
     (let [modules (ordered-builds project)
-          profiles (compress-profiles project)
-          args (with-profiles profiles args)
+          profiles (compressed-profiles project)
+          args (cli-with-profiles profiles args)
           subprocess (get-in project [:modules :subprocess] (or (System/getenv "LEIN_CMD") "lein"))]
       (if (empty? modules)
         (println "No modules found")

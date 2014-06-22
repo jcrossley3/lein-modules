@@ -7,6 +7,6 @@
     (is (= [:a] (compress [:b :d] profiles)))
     (is (= [:a :k] (compress [:b :d :k] profiles)))
     (is (= [:a :a :k] (compress [:a :b :d :k] profiles)))
-    (is (= [:a :c] (compress [:b :d :d] profiles)))
+    (is (= [:a] (compress [:b :d :d] profiles)))
     (is (= [:k :s :t] (compress [:k :s :t] profiles)))
     (is (= [:k :s :t] (compress [:k :s :t] {})))))

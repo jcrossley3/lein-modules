@@ -1,8 +1,16 @@
 (ns lein-modules.common
+  (:use [lein-modules.compression :only (compressed-profiles)])
   (:require [leiningen.core.project :as prj]
             [clojure.java.io :as io]))
 
 (def read-project prj/read)
+
+(defn with-profiles
+  "Apply profiles to project"
+  [project profiles]
+  (when project
+    (let [profiles (filter (set profiles) (-> project meta :profiles keys))]
+      (prj/set-profiles project profiles))))
 
 (defn parent
   "Return the project's parent project"
@@ -16,7 +24,8 @@
               (.getCanonicalFile (io/file (:root project) $))
               (if (.isDirectory $) $ (.getParentFile $))
               (io/file $ "project.clj")
-              (if (.exists $) (read-project (str $)))))))
+              (when (.exists $) (read-project (str $)))
+              (when $ (with-profiles $ (compressed-profiles project)))))))
 
 (defn config
   "Traverse all parents to accumulate a list of :modules config,

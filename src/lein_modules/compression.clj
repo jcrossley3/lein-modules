@@ -2,7 +2,8 @@
   "Only necessary because 2.3.4+ expands active profiles, and while
   the child may include the composites, its expansions will be
   different. This isn't foolproof."
-  (:require [leiningen.core.project :as prj]))
+  (:require [leiningen.core.project :as prj]
+            [clojure.set :refer (subset?)]))
 
 (def ^:private expansions
   "Returns a sequence of pairs where the first is the expansion of the
@@ -11,7 +12,7 @@
   (memoize
     (fn [profiles]
       (->> profiles
-        (filter (fn [[_ v]] (prj/composite-profile? v)))
+        (filter (comp prj/composite-profile? second))
         (map (fn [[k v]]
                (loop [[h & t] v, r []]
                  (cond
@@ -23,12 +24,9 @@
 (defn- substitute
   "If found, replace a sub-sequence of a collection with v"
   [coll sub v]
-  (let [size (count sub)]
-    (or
-      (first (for [i (range (- (count coll) (dec size)))
-                   :when (= sub (take size (drop i coll)))]
-               (concat (take i coll) (cons v (drop (+ size i) coll)))))
-      coll)))
+  (if (subset? sub (set coll))
+    (conj (remove (set sub) coll) v)
+    coll))
 
 (defn compress
   "Compresses expanded profiles into their associated composites"
@@ -39,3 +37,8 @@
         result
         (recur r (substitute result sub with))))))
 
+(defn compressed-profiles
+  [project]
+  (compress
+    (-> project meta :included-profiles distinct)
+    (-> project meta :profiles)))

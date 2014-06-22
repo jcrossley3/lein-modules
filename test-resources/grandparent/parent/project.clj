@@ -11,4 +11,4 @@
                        foo "2"
                        c "1"}}
   :profiles {:by-parent {:modules {:dirs ["sibling"]}}
-             :by-child  {}})
+             :by-child  {:modules {:parent "../../stepmom/project.clj"}}})
