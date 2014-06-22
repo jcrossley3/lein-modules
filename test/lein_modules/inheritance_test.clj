@@ -65,3 +65,9 @@
   ;; profiles bring in multiple clojure-complete deps
   (let [p (inherit project)]
     (is (= (:dependencies p) (-> p :dependencies distinct)))))
+
+(deftest active-profiles-should-be-applied-to-all-parents
+  (let [p (-> (prj/read "test-resources/grandparent/parent/stepchild/project.clj")
+            prj/init-project
+            (prj/merge-profiles [:by-child :skip-parent]))]
+    (is (= "baz" (:foo p)))))

@@ -26,3 +26,11 @@
          'midje/midje           "1.6.3"
          'org.clojure/clojure   "1.5.1"
          'com.taoensso/timbre   "3.1.6")))
+
+(deftest versionization-by-profile
+  (let [p (-> (prj/read "test-resources/grandparent/parent/stepchild/project.clj")
+            prj/init-project)]
+    (is (nil?  (-> p (prj/merge-profiles []) versions :v)))
+    (is (= "1" (-> p (prj/merge-profiles [:by-child]) versions :v)))
+    (is (= "2" (-> p (prj/merge-profiles [:by-child :skip-parent]) versions :v)))
+    (is (= "3" (-> p (prj/merge-profiles [:by-child :skip-parent :version-override]) versions :v)))))

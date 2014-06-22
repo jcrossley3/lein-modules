@@ -14,18 +14,20 @@
 
 (defn parent
   "Return the project's parent project"
-  [project]
-  (let [p (get-in project [:modules :parent] ::none)]
-    (cond
-      (map? p) p                        ; handy for testing
-      (not p) nil                       ; don't search for parent
-      :else (as-> (if (= p ::none) nil p) $
-              (or $ (-> project :parent prj/dependency-map :relative-path) "..")
-              (.getCanonicalFile (io/file (:root project) $))
-              (if (.isDirectory $) $ (.getParentFile $))
-              (io/file $ "project.clj")
-              (when (.exists $) (read-project (str $)))
-              (when $ (with-profiles $ (compressed-profiles project)))))))
+  ([project]
+     (parent project (compressed-profiles project)))
+  ([project profiles]
+     (let [p (get-in project [:modules :parent] ::none)]
+       (cond
+         (map? p) p                        ; handy for testing
+         (not p) nil                       ; don't search for parent
+         :else (as-> (if (= p ::none) nil p) $
+                 (or $ (-> project :parent prj/dependency-map :relative-path) "..")
+                 (.getCanonicalFile (io/file (:root project) $))
+                 (if (.isDirectory $) $ (.getParentFile $))
+                 (io/file $ "project.clj")
+                 (when (.exists $) (read-project (str $)))
+                 (when $ (with-profiles $ profiles)))))))
 
 (defn config
   "Traverse all parents to accumulate a list of :modules config,

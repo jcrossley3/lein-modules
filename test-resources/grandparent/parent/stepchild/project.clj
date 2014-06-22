@@ -2,4 +2,6 @@
   :description "stepchild"
   :modules {:parent nil}
   :middleware [lein-modules.plugin/middleware]
-  :profiles {:by-child {:modules {:parent ".."}}})
+  :profiles {:by-child {:modules {:parent ".."}}
+             :skip-parent {}
+             :version-override {:modules {:versions {:v "3"}}}})

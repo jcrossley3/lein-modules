@@ -38,21 +38,23 @@
   "Return a profile map containing all the profiles found in the
   project and its ancestors, resulting in standard profiles,
   e.g. :test and :dev, becoming composite"
-  [project]
-  (loop [p project, result nil]
-    (if (nil? p)
-      result
-      (recur (parent p)
-        (reduce (compositor p) result
-          (conj (select-keys (:modules p) [:inherited])
-            (filter-profiles (:profiles (meta p)))))))))
+  ([project]
+     (compositize-profiles project (compressed-profiles project)))
+  ([project active-profiles]
+     (loop [p project, result nil]
+       (if (nil? p)
+         result
+         (recur (parent p active-profiles)
+           (reduce (compositor p) result
+             (conj (select-keys (:modules p) [:inherited])
+               (filter-profiles (:profiles (meta p))))))))))
 
 (defn inherit
   "Add profiles from parents, setting any :inherited ones if found,
   where a parent profile overrides a grandparent."
   [project]
   (let [current (compressed-profiles project)
-        compost (compositize-profiles project)]
+        compost (compositize-profiles project current)]
     (-> (prj/add-profiles project compost)
       (vary-meta update-in [:profiles] merge compost)
       (prj/set-profiles (if (:inherited compost)
