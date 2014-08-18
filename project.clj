@@ -1,4 +1,4 @@
-(defproject lein-modules "0.3.8"
+(defproject lein-modules "0.3.9-SNAPSHOT"
   :description "Similar to Maven multi-module projects, but less sucky"
   :url "https://github.com/jcrossley3/lein-modules"
   :license {:name "Eclipse Public License"
