@@ -34,7 +34,7 @@
     (->> (file-seq-sans-symlinks (io/file (:root project)))
       (filter #(= "project.clj" (.getName %)))
       (remove #(= (:root project) (.getParent %)))
-      (map (comp #(try (prj/read %) (catch Exception _)) str))
+      (map (comp #(try (prj/read %) (catch Exception e (println (.getMessage e)))) str))
       (remove nil?)
       (filter #(child? project (with-profiles % (compressed-profiles project)))))))
 
