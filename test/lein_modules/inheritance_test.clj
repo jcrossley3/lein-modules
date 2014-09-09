@@ -71,3 +71,11 @@
             prj/init-project
             (prj/merge-profiles [:by-child :skip-parent]))]
     (is (= "baz" (:foo p)))))
+
+(deftest inheritance-should-work-without-config
+  (let [p (-> (prj/read "test-resources/configless/kidB/project.clj")
+            prj/init-project)]
+    (is (= [:dev] (:foo p)))
+    (let [dep (-> p :dependencies first)]
+      (is (= 'kidA/kidA (first dep)))
+      (is (= "0.1.0-SNAPSHOT" (last dep))))))

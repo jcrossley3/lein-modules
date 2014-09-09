@@ -79,3 +79,7 @@
       ":dirs" "child" ":checkouts")
     (is (not (.exists dad)))
     (is (not (.exists child)))))
+
+(deftest configless-modules
+  (let [p (prj/init-project (prj/read "test-resources/configless/project.clj"))]
+    (is (= ["kidA" "kidB"] (->> p ordered-builds (map :name))))))

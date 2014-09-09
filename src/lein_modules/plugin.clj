@@ -8,8 +8,7 @@
   middleware calls with a metadata flag.
   See https://github.com/technomancy/leiningen/issues/1151"
   [project]
-  (if (or (-> project config empty?)
-        (-> project meta ::middleware-applied))
+  (if (-> project meta ::middleware-applied)
     project
     (-> project
       (vary-meta assoc ::middleware-applied true)
