@@ -24,15 +24,7 @@ automatic checkout dependencies.
 ## Installation
 
 Simply include `[lein-modules "0.3.9"]` in the `:plugins` vector of
-your Leiningen project.
-
-Installing it globally in your `:user` profile makes the `modules`
-higher-order task available to any project, but the plugin's implicit
-middleware will only affect those projects with a `:modules` map in
-their project.clj.
-
-If you'd rather not install it globally, it needs to be in the
-`:plugins` vector of every associated module's project.clj.
+every associated module's `project.clj`.
 
 Minimum supported versions:
 * Leiningen: 2.3.4
@@ -126,10 +118,11 @@ To use it with lein-modules, some configuration of its
 Invoking `lein modules release` isn't feasible because all the modules
 reside in the same repo. Only the first would succeed and subsequent
 modules would error due to the release tag already existing. The
-version in each modules' project.clj must be changed before committing
-and tagging the release. So instead of `lein modules release`, we run
-`lein release` in the parent project and adjust its `:release-tasks`
-to prepend "modules" to the "change" and "deploy" steps:
+version in each modules' `project.clj` must be changed before
+committing and tagging the release. So instead of `lein modules
+release`, we run `lein release` in the parent project and adjust its
+`:release-tasks` to prepend "modules" to the "change" and "deploy"
+steps:
 
 ```clj
 (defproject your-project "0.1.0-SNAPSHOT"
@@ -201,7 +194,7 @@ any of the following keys:
 
 * `:dirs` - A vector of strings denoting the relative paths to the
   project's child modules. Normally, they're discovered automatically
-  by searching for project.clj files beneath the project's `:root`
+  by searching for `project.clj` files beneath the project's `:root`
   with a related parent, but this vector can override that behavior by
   specifying exactly which directories contain child modules. This
   vector is only required when your module hierarchy doesn't match
