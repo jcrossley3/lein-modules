@@ -153,7 +153,9 @@ will override the [:modules :dirs] config in project.clj"
     (let [modules (ordered-builds project)
           profiles (compressed-profiles project)
           args (cli-with-profiles profiles args)
-          subprocess (get-in project [:modules :subprocess] (or (System/getenv "LEIN_CMD") "lein"))]
+          subprocess (get-in project [:modules :subprocess]
+                       (or (System/getenv "LEIN_CMD")
+                         (if (= :windows (utils/get-os)) "lein.bat" "lein")))]
       (if (empty? modules)
         (println "No modules found")
         (do
