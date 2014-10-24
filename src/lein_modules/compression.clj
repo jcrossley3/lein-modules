@@ -41,4 +41,4 @@
   [project]
   (compress
     (-> project meta :included-profiles distinct)
-    (-> project meta :profiles (dissoc :default))))
+    (-> project meta :profiles (dissoc :default :leiningen/default))))
