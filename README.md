@@ -83,7 +83,7 @@ Consider the following lein-sub configuration:
 And the equivalent lein-modules configuration:
 
     :modules {:dirs ["module/common" "module/web" "module/cli"]
-              :subprocess false}
+              :subprocess nil}
 
 Usage for both tasks is similar:
 
@@ -98,8 +98,8 @@ But there are some important differences:
   vector, but lein-modules always builds them in dependency order,
   regardless of the order of its `:dirs` vector
 * lein-sub runs the tasks for each module in the same Leiningen
-  process, while lein-modules spawns a new process for each *unless*
-  `:subprocess` is set to false
+  process, while lein-modules spawns a new process identified by the 
+  `:subprocess` config option, which defaults to "lein"
 * lein-modules supports automatic discovery of child modules so that
   you don't have to set `:dirs` at all
 * lein-modules simplifies your release process by eliminating the
@@ -127,7 +127,7 @@ steps:
 ```clj
 (defproject your-project "0.1.0-SNAPSHOT"
   ...
-  :modules {:subprocess false
+  :modules {:subprocess nil
             :inherited {:deploy-repositories
                         [["releases" {:url "https://clojars.org/repo/" :creds :gpg}]]}}
   :release-tasks [["vcs" "assert-committed"]
@@ -141,7 +141,7 @@ steps:
 ```
 Note the `:modules` map.
 
-We set `:subprocess` to false because the release task binds a dynamic
+We set `:subprocess` to nil because the release task binds a dynamic
 variable to the value of its optional `level` argument that will be
 lost in a new subprocess.
 
@@ -210,14 +210,14 @@ any of the following keys:
 
 * `:subprocess` - The name of the executable invoked by the `modules`
   subtask for each child module in a separate process. Its default
-  value is `"lein"`. You can optionally set it to false. This will
+  value is `"lein"`. You can optionally set it to `nil`, which will
   speed up your build considerably since it runs every child module's
   task in the same process that invoked `lein modules`. This should be
   ok for most tasks, but can sometimes lead to surprises, e.g. hooks
   from one project can infect others, and the current working
   directory won't match the `:root` of the child project. Still, for
   common tasks like `clean` it can be convenient to configure a
-  `:fast` profile that sets `:subprocess` to false for projects with
+  `:fast` profile that sets `:subprocess` to `nil` for projects with
   lots of child modules.
 
 ## Example
@@ -246,7 +246,7 @@ version itself will be tried as a key.
                {:modules {:dirs ["../dist"]}}
 
              :fast
-               {:modules {:subprocess false}}}
+               {:modules {:subprocess nil}}}
 
   :modules  {:inherited
                {:deploy-repositories
