@@ -1,9 +1,12 @@
 (ns lein-modules.common
-  (:use [lein-modules.compression :only (compressed-profiles)])
   (:require [leiningen.core.project :as prj]
-            [clojure.java.io :as io]))
+            [leiningen.core.main :refer (version-satisfies? leiningen-version)]
+            [clojure.java.io :as io]
+            [lein-modules.compression :refer (compressed-profiles)]))
 
-(def read-project prj/read)
+(def read-project (if (version-satisfies? (leiningen-version) "2.5")
+                    (load-string "#(prj/init-profiles (prj/project-with-profiles (prj/read-raw %)) [:default])")
+                    prj/read))
 
 (defn with-profiles
   "Apply profiles to project"

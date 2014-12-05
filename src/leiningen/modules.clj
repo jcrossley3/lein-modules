@@ -6,7 +6,7 @@
             [clojure.java.io :as io]
             [clojure.string :as s])
   (:use [lein-modules.inheritance :only (inherit)]
-        [lein-modules.common      :only (parent with-profiles)]
+        [lein-modules.common      :only (parent with-profiles read-project)]
         [lein-modules.compression :only (compressed-profiles)]))
 
 (defn child?
@@ -27,14 +27,14 @@
   [project]
   (if-let [dirs (-> project :modules :dirs)]
     (remove nil?
-      (map (comp #(try (prj/read %) (catch Exception e (println (.getMessage e))))
+      (map (comp #(try (read-project %) (catch Exception e (println (.getMessage e))))
              (memfn getCanonicalPath)
              #(io/file (:root project) % "project.clj"))
         dirs))
     (->> (file-seq-sans-symlinks (io/file (:root project)))
       (filter #(= "project.clj" (.getName %)))
       (remove #(= (:root project) (.getParent %)))
-      (map (comp #(try (prj/read %) (catch Exception e (println (.getMessage e)))) str))
+      (map (comp #(try (read-project %) (catch Exception e (println (.getMessage e)))) str))
       (remove nil?)
       (filter #(child? project (with-profiles % (compressed-profiles project)))))))
 
@@ -116,6 +116,15 @@
     (str "(" (second args) ")")
     ""))
 
+(defn dump-modules
+  [modules]
+  (if (empty? modules)
+    (println "No modules found")
+    (do
+      (println " Module build order:")
+      (doseq [p modules]
+        (println "  " (:name p))))))
+
 (defn modules
   "Run a task for all related projects in dependency order.
 
@@ -149,29 +158,23 @@ will override the [:modules :dirs] config in project.clj"
                   (assoc-in [:modules :dirs] dirs)
                   (vary-meta assoc-in [:without-profiles :modules :dirs] dirs))
                 (drop 2 args)))
-    nil nil                             ; do nothing if no task passed
+    nil (dump-modules (ordered-builds project))
     (let [modules (ordered-builds project)
           profiles (compressed-profiles project)
           args (cli-with-profiles profiles args)
           subprocess (get-in project [:modules :subprocess]
                        (or (System/getenv "LEIN_CMD")
                          (if (= :windows (utils/get-os)) "lein.bat" "lein")))]
-      (if (empty? modules)
-        (println "No modules found")
-        (do
-          (println "------------------------------------------------------------------------")
-          (println " Module build order:")
-          (doseq [p modules]
-            (println "  " (:name p)))
-          (doseq [project modules]
-            (println "------------------------------------------------------------------------")
-            (println " Building" (:name project) (:version project) (dump-profiles args))
-            (println "------------------------------------------------------------------------")
-            (if-let [cmd (get-in project [:modules :subprocess] subprocess)]
-              (binding [eval/*dir* (:root project)]
-                (let [exit-code (apply eval/sh (cons cmd args))]
-                  (when (pos? exit-code)
-                    (throw (ex-info "Subprocess failed" {:exit-code exit-code})))))
-              (let [project (prj/init-project project)
-                    task (main/lookup-alias (first args) project)]
-                (main/apply-task task project (rest args))))))))))
+      (dump-modules modules)
+      (doseq [project modules]
+        (println "------------------------------------------------------------------------")
+        (println " Building" (:name project) (:version project) (dump-profiles args))
+        (println "------------------------------------------------------------------------")
+        (if-let [cmd (get-in project [:modules :subprocess] subprocess)]
+          (binding [eval/*dir* (:root project)]
+            (let [exit-code (apply eval/sh (cons cmd args))]
+              (when (pos? exit-code)
+                (throw (ex-info "Subprocess failed" {:exit-code exit-code})))))
+          (let [project (prj/init-project project)
+                task (main/lookup-alias (first args) project)]
+            (main/apply-task task project (rest args))))))))
