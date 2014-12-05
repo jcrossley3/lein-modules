@@ -23,7 +23,7 @@ automatic checkout dependencies.
 
 ## Installation
 
-Simply include `[lein-modules "0.3.9"]` in the `:plugins` vector of
+Simply include `[lein-modules "0.3.10"]` in the `:plugins` vector of
 every associated module's `project.clj`.
 
 Minimum supported versions:
@@ -234,7 +234,7 @@ version itself will be tried as a key.
 ### Parent
 ```clj
 (defproject org.immutant/immutant-suite "1.0.3-SNAPSHOT"
-  :plugins [[lein-modules "0.3.9"]]
+  :plugins [[lein-modules "0.3.10"]]
 
   :profiles {:provided
                {:dependencies [[org.clojure/clojure "_"]
@@ -274,7 +274,7 @@ version itself will be tried as a key.
 ### Child
 ```clj
 (defproject org.immutant/web "1.0.3-SNAPSHOT"
-  :plugins [[lein-modules "0.3.9"]]
+  :plugins [[lein-modules "0.3.10"]]
   :description "The web component"
   :dependencies [[org.immutant/core :version]
                  [ring/ring-servlet "_"]
