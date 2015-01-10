@@ -10,7 +10,7 @@
   required for 2.3.4"
   [m]
   (if (:dependencies m)
-    (update-in m [:dependencies] normalizer)
+    (with-meta (update-in m [:dependencies] normalizer) (meta m))
     m))
 
 (defn filter-profiles
