@@ -76,6 +76,5 @@
   (let [p (-> (prj/read "test-resources/configless/kidB/project.clj")
             prj/init-project)]
     (is (= :dev (:foo p)))
-    (let [dep (-> p :dependencies first)]
-      (is (= 'kidA/kidA (first dep)))
-      (is (= "0.1.0-SNAPSHOT" (last dep))))))
+    (let [deps (-> p :dependencies set)]
+      (is (deps '[kidA/kidA "0.1.0-SNAPSHOT"])))))

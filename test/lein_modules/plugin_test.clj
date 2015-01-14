@@ -15,6 +15,5 @@
   (let [p (-> (prj/read "test-resources/grandparent/parent/child/project.clj")
             (update-in [:middleware] conj 'lein-modules.plugin/middleware)
             (vary-meta update-in [:without-profiles :middleware] conj 'lein-modules.plugin/middleware))
-        dep (-> p prj/init-project :dependencies (nth 7))]
-    (is (= 'foo/d (first dep)))
-    (is (= "2.0" (last dep)))))
+        deps (-> p prj/init-project :dependencies set)]
+    (is (deps '[foo/d "2.0"]))))
