@@ -14,9 +14,10 @@
     m))
 
 (defn filter-profiles
-  "We don't want to inherit the :user or :leiningen/test profiles"
+  "We don't want to inherit the non-project-specific profiles or any
+  in the leiningen namespace"
   [m]
-  (let [ignored [:user]
+  (let [ignored [:base :system :user]
         lein-ns (->> m keys (filter #(= "leiningen" (namespace %))))]
     (apply dissoc m (concat ignored lein-ns))))
 

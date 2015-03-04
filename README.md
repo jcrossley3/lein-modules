@@ -166,10 +166,10 @@ any of the following keys:
   applied before the `:default` ones, but profile inheritance occurs
   whether you define an `:inherited` profile or not, because **all**
   profile maps from ancestors are automatically added to the child
-  (excluding `:user` and any in the `:leiningen` namespace).
-  Therefore, ancestor profiles such as `:dev`, `:provided`,
-  `:production` or `:whatever` are [un]merged in the child as
-  appropriate for the task at hand.
+  (excluding `:base`, `:system`, `:user` and any in the `leiningen`
+  namespace). Therefore, ancestor profiles such as `:dev`,
+  `:provided`, `:production` or `:whatever` are [un]merged in the
+  child as appropriate for the task at hand.
 
 * `:versions` - A mapping of dependency symbols to version strings. As
   a simpler alternative to Maven's dependency management, versions for
