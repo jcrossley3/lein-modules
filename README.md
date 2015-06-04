@@ -121,8 +121,8 @@ modules would error due to the release tag already existing. The
 version in each modules' `project.clj` must be changed before
 committing and tagging the release. So instead of `lein modules
 release`, we run `lein release` in the parent project and adjust its
-`:release-tasks` to prepend "modules" to the "change" and "deploy"
-steps:
+`:release-tasks` to invoke the "change" and "deploy" tasks for the
+modules:
 
 ```clj
 (defproject your-project "0.1.0-SNAPSHOT"
@@ -131,22 +131,22 @@ steps:
             :inherited {:deploy-repositories
                         [["releases" {:url "https://clojars.org/repo/" :creds :gpg}]]}}
   :release-tasks [["vcs" "assert-committed"]
+                  ["change" "version" "leiningen.release/bump-version" "release"]
                   ["modules" "change" "version" "leiningen.release/bump-version" "release"]
                   ["vcs" "commit"]
                   ["vcs" "tag"]
                   ["modules" "deploy"]
+                  ["change" "version" "leiningen.release/bump-version"]
                   ["modules" "change" "version" "leiningen.release/bump-version"]
                   ["vcs" "commit"]
                   ["vcs" "push"]])
 ```
-Note the `:modules` map.
-
-We set `:subprocess` to nil because the release task binds a dynamic
-variable to the value of its optional `level` argument that will be
-lost in a new subprocess.
-
-We also take advantage of the `:inherited` profile so we don't have to
-redundantly configure the "releases" repo in every child module.
+Note the `:modules` map: 
+* We set `:subprocess` to nil because the release task binds a dynamic
+  variable to the value of its optional `level` argument that will be
+  lost in a new subprocess.
+* We also take advantage of the `:inherited` profile so we don't have
+  to redundantly configure the "releases" repo in every child module.
 
 ## Configuration
 
