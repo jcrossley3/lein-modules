@@ -1,6 +1,7 @@
 (ns lein-modules.versionization
   (:use [lein-modules.common :only (config)]
-        [leiningen.core.project :only (artifact-map)]))
+        [leiningen.core.project :only (artifact-map)]
+        [lein-modules.common :only (primogenitor progeny without-middleware)]))
 
 (defn versions
   "Merge dependency management maps of :versions from the
@@ -33,11 +34,20 @@
         ver)
       opts)))
 
+(def related-module-versions
+  "Return a mapping of all related project symbols to their versions"
+  (memoize
+    (fn [project]
+      (without-middleware
+        (into {}
+          (for [[k v] (-> project primogenitor progeny)]
+            [k (:version v)]))))))
+
 (defn versionize
   "Substitute versions in dependency vectors with actual versions from
   the :versions modules config"
   [project]
-  (let [vmap (merge (select-keys project [:version]) (versions project))
+  (let [vmap (merge (related-module-versions project) (versions project))
         f #(with-meta (for [d %] (expand-version d vmap)) (meta %))]
     (-> project
       (update-in [:dependencies] f)

@@ -15,7 +15,8 @@
          '[foo/a "1"]
          '[foo/b "2"]
          '[foo/c "3"]
-         '[foo/d "2.0"])))
+         '[foo/d "2.0"]
+         '[sibling/sibling "0.2.0-SNAPSHOT"])))
 
 (deftest partial-composites-should-work
   (let [p (-> (prj/read "test-resources/lambda/project.clj")

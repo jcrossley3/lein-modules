@@ -102,11 +102,9 @@ But there are some important differences:
   `:subprocess` config option, which defaults to "lein"
 * lein-modules supports automatic discovery of child modules so that
   you don't have to set `:dirs` at all
-* lein-modules simplifies your release process by eliminating the
-  redundant references to your project's current version in
-  interdependent modules, e.g.
-  `[:dependencies [[your-project/common :version]]`, resolving the
-  `:version` keyword to the value from the dependent's own project map
+* lein-modules resolves interdependent child modules automatically, so
+  you only need to specify the version of each child once, in its own
+  `project.clj`
 
 ### Release Management
 
@@ -188,9 +186,8 @@ any of the following keys:
   versions of your child modules' shared dependencies in a single
   place. And like the `:inherited` profile, when multiple `:versions`
   maps are found among ancestors, the most immediate take precedence.
-  The *project* map's `:version` is automatically included in the
-  `:versions` map, so your interdependent modules may use that without
-  configuring this option at all.
+  The versions of all child modules are automatically discovered and
+  included in this map for you.
 
 * `:dirs` - A vector of strings denoting the relative paths to the
   project's child modules. Normally, they're discovered automatically
@@ -267,8 +264,7 @@ version itself will be tried as a key.
                         midje                         "1.6.0"
                         ring                          "1.2.1"
                         :jbossas                      "7.2.x.slim.incremental.12"
-                        org.jboss.as                  :jbossas
-                        org.immutant                  :version}})
+                        org.jboss.as                  :jbossas}})
 ```
 
 ### Child
@@ -276,7 +272,7 @@ version itself will be tried as a key.
 (defproject org.immutant/web "1.0.3-SNAPSHOT"
   :plugins [[lein-modules "0.3.11"]]
   :description "The web component"
-  :dependencies [[org.immutant/core :version]
+  :dependencies [[org.immutant/core "_"]
                  [ring/ring-servlet "_"]
                  [potemkin "0.3.4"]])
 ```

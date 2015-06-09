@@ -1,5 +1,5 @@
 (ns lein-modules.inheritance
-  (:use [lein-modules.common :only (config parent)]
+  (:use [lein-modules.common :only (config parent without-middleware)]
         [lein-modules.compression :only (compressed-profiles)])
   (:require [leiningen.core.project :as prj]))
 
@@ -42,13 +42,14 @@
   ([project]
      (compositize-profiles project (compressed-profiles project)))
   ([project active-profiles]
+   (without-middleware
      (loop [p project, result nil]
        (if (nil? p)
          result
          (recur (parent p active-profiles)
            (reduce (compositor p) result
              (conj (select-keys (:modules p) [:inherited])
-               (filter-profiles (:profiles (meta p))))))))))
+               (filter-profiles (:profiles (meta p)))))))))))
 
 (defn inherit
   "Add profiles from parents, setting any :inherited ones if found,

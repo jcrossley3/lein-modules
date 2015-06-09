@@ -5,56 +5,8 @@
             [leiningen.core.utils :as utils]
             [clojure.java.io :as io]
             [clojure.string :as s])
-  (:use [lein-modules.inheritance :only (inherit)]
-        [lein-modules.common      :only (parent with-profiles read-project)]
+  (:use [lein-modules.common      :only (progeny)]
         [lein-modules.compression :only (compressed-profiles)]))
-
-(defn child?
-  "Return true if child is an immediate descendant of project"
-  [project child]
-  (= (:root project) (:root (parent child))))
-
-(defn file-seq-sans-symlinks
-  "A tree seq on java.io.Files that aren't symlinks"
-  [dir]
-  (tree-seq
-    (fn [^java.io.File f] (and (.isDirectory f) (not (utils/symlink? f))))
-    (fn [^java.io.File d] (seq (.listFiles d)))
-    dir))
-
-(defn children
-  "Return the child maps for a project according to its active profiles"
-  [project]
-  (if-let [dirs (-> project :modules :dirs)]
-    (remove nil?
-      (map (comp #(try (read-project %) (catch Exception e (println (.getMessage e))))
-             (memfn getCanonicalPath)
-             #(io/file (:root project) % "project.clj"))
-        dirs))
-    (->> (file-seq-sans-symlinks (io/file (:root project)))
-      (filter #(= "project.clj" (.getName %)))
-      (remove #(= (:root project) (.getParent %)))
-      (map (comp #(try (read-project %) (catch Exception e (println (.getMessage e)))) str))
-      (remove nil?)
-      (filter #(child? project (with-profiles % (compressed-profiles project)))))))
-
-(defn id
-  "Returns fully-qualified symbol identifier for project"
-  [project]
-  (if project
-    (symbol (:group project) (:name project))))
-
-(defn progeny
-  "Recursively return the project's children in a map keyed by id"
-  ([project]
-     (progeny project (compressed-profiles project)))
-  ([project profiles]
-     (let [kids (children (with-profiles project profiles))]
-       (apply merge
-         (into {} (map (juxt id identity) kids))
-         (->> kids
-           (remove #(= (:root project) (:root %))) ; in case "." in :dirs
-           (map #(progeny % profiles)))))))
 
 (defn interdependence
   "Turn a progeny map (symbols to projects) into a mapping of projects

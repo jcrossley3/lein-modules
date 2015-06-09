@@ -9,6 +9,6 @@
                  [foo/b _]
                  [foo/c _]
                  [foo/d :ver]
-                 [sibling "0.1.0-SNAPSHOT"]]
+                 [sibling _]]
   :modules {:versions {parent "3.0"}}
   :profiles {:by-child  {}})
