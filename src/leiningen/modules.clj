@@ -3,8 +3,7 @@
             [leiningen.core.main :as main]
             [leiningen.core.eval :as eval]
             [leiningen.core.utils :as utils]
-            [clojure.java.io :as io]
-            [clojure.string :as s])
+            [clojure.java.io :as io])
   (:use [lein-modules.inheritance :only (inherit)]
         [lein-modules.common      :only (parent with-profiles read-project)]
         [lein-modules.compression :only (compressed-profiles)]))
@@ -125,6 +124,57 @@
       (doseq [p modules]
         (println "  " (:name p))))))
 
+(defn -modules
+  "Helper method for main modules task.  This does all the Heavy lifting."
+  [project module-list & args]
+  (condp = (first args)
+      ":checkouts" (do
+                     (checkout-dependencies project)
+                     (apply -modules project module-list (remove #{":checkouts"} args)))
+      ":dirs" (let [dirs (s/split (second args) #"[:,]")]
+                (apply -modules
+                       (-> project
+                           (assoc-in [:modules :dirs] dirs)
+                           (vary-meta assoc-in [:without-profiles :modules :dirs] dirs))
+                       module-list
+                       (drop 2 args)))
+      ":sub-module" (let [top-module-name (second args)
+                          all-ordered-modules (ordered-builds project)
+                          top-module (first (filter #(= top-module-name (:name %)) all-ordered-modules))              ; Top Submodule to build. A map.
+                          all-project-names (map id all-ordered-modules)        ; All the names to check against if we care about them.
+                          to-build (loop [project-list [(id top-module)]   ; Get a list of all project names that need to be built.
+                                          modules-to-build #{}]
+                                     (cond (empty? project-list) modules-to-build
+                                           :else
+                                           (let [sub-module-name (first project-list)
+                                                 sub-module (first (filter #(= sub-module-name (id %)) all-ordered-modules))
+                                                 all-sub-module-deps (map #(first %) (:dependencies sub-module))
+                                                 sub-deps (filter (set all-sub-module-deps) all-project-names) ]
+                                             (recur (distinct (concat (rest project-list) sub-deps )) (conj modules-to-build sub-module) ))))]
+                      (apply -modules project (filter to-build all-ordered-modules) (drop 2 args)))
+      nil (dump-modules module-list)
+      (cond (empty? module-list) (apply -modules project (ordered-builds project) args)
+                :else
+                (let [profiles (compressed-profiles project)
+                      args (cli-with-profiles profiles args)
+                      subprocess (get-in project [:modules :subprocess]
+                                         (or (System/getenv "LEIN_CMD")
+                                             (if (= :windows (utils/get-os)) "lein.bat" "lein")))]
+                  (dump-modules module-list)
+                  (doseq [project module-list]
+                    (println "------------------------------------------------------------------------")
+                    (println " Building" (:name project) (:version project) (dump-profiles args))
+                    (println "------------------------------------------------------------------------")
+                    (if-let [cmd (get-in project [:modules :subprocess] subprocess)]
+                      (binding [eval/*dir* (:root project)]
+                        (let [exit-code (apply eval/sh (cons cmd args))]
+                          (when (pos? exit-code)
+                            (throw (ex-info "Subprocess failed" {:exit-code exit-code})))))
+                      (let [project (prj/init-project project)
+                            task (main/lookup-alias (first args) project)]
+                        (main/apply-task task project (rest args))))))))
+  )
+
 (defn modules
   "Run a task for all related projects in dependency order.
 
@@ -146,35 +196,16 @@ And you can limit which modules run the task with the :dirs option:
   $ lein modules :dirs core,web install
 
 Delimited by either comma or colon, this list of relative paths
-will override the [:modules :dirs] config in project.clj"
+will override the [:modules :dirs] config in project.clj
+
+And you can choose to build a sub-tree of the project with only its
+dependencies in your stack:
+
+  $ lein modules :sub-module web test
+
+This will remove all projects that are not needed by the sub-module
+from the build only building modules that it depends on (and they
+depend on).
+"
   [project & args]
-  (condp = (first args)
-    ":checkouts" (do
-                   (checkout-dependencies project)
-                   (apply modules project (remove #{":checkouts"} args)))
-    ":dirs" (let [dirs (s/split (second args) #"[:,]")]
-              (apply modules
-                (-> project
-                  (assoc-in [:modules :dirs] dirs)
-                  (vary-meta assoc-in [:without-profiles :modules :dirs] dirs))
-                (drop 2 args)))
-    nil (dump-modules (ordered-builds project))
-    (let [modules (ordered-builds project)
-          profiles (compressed-profiles project)
-          args (cli-with-profiles profiles args)
-          subprocess (get-in project [:modules :subprocess]
-                       (or (System/getenv "LEIN_CMD")
-                         (if (= :windows (utils/get-os)) "lein.bat" "lein")))]
-      (dump-modules modules)
-      (doseq [project modules]
-        (println "------------------------------------------------------------------------")
-        (println " Building" (:name project) (:version project) (dump-profiles args))
-        (println "------------------------------------------------------------------------")
-        (if-let [cmd (get-in project [:modules :subprocess] subprocess)]
-          (binding [eval/*dir* (:root project)]
-            (let [exit-code (apply eval/sh (cons cmd args))]
-              (when (pos? exit-code)
-                (throw (ex-info "Subprocess failed" {:exit-code exit-code})))))
-          (let [project (prj/init-project project)
-                task (main/lookup-alias (first args) project)]
-            (main/apply-task task project (rest args))))))))
+  (apply -modules project () args))
