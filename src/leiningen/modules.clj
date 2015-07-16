@@ -3,8 +3,8 @@
             [leiningen.core.main :as main]
             [leiningen.core.eval :as eval]
             [leiningen.core.utils :as utils]
-            [clojure.string :as s]
-            [clojure.java.io :as io])
+            [clojure.java.io :as io]
+            [clojure.string :as s])
   (:use [lein-modules.inheritance :only (inherit)]
         [lein-modules.common      :only (parent with-profiles read-project)]
         [lein-modules.compression :only (compressed-profiles)]))
