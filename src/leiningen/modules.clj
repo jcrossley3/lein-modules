@@ -145,11 +145,10 @@
                           all-project-names (map id all-ordered-modules)        ; All the names to check against if we care about them.
                           to-build (loop [project-list [(id top-module)]   ; Get a list of all project names that need to be built.
                                           modules-to-build #{}]
-                                     (cond (empty? project-list) modules-to-build
-                                           :else
+                                     (if (empty? project-list) modules-to-build
                                            (let [sub-module-name (first project-list)
                                                  sub-module (first (filter #(= sub-module-name (id %)) all-ordered-modules))
-                                                 all-sub-module-deps (map #(first %) (:dependencies sub-module))
+                                                 all-sub-module-deps (map first (:dependencies sub-module))
                                                  sub-deps (filter (set all-sub-module-deps) all-project-names) ]
                                              (recur (distinct (concat (rest project-list) sub-deps )) (conj modules-to-build sub-module) ))))]
                       (apply -modules project (filter to-build all-ordered-modules) (drop 2 args)))
