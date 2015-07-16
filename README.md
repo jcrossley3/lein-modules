@@ -202,6 +202,14 @@ any of the following keys:
   directory. Regardless of this option, build order is always
   determined by module interdependence.
 
+* `:sub-module` - A string denoting which sub-project you wish to build
+  including all its dependencies in the project.  For instance if you 
+  have ten sub-modules and `lein modules` will build them all you can 
+  select one submodule and it will only run the task on that project
+  and any others it depends on.  This makesx it more efficent than 
+  `:dirs` as the build order and other sub-modules it relies on are 
+  discovered automatically.
+
 * `:parent` - A string denoting the relative path to the parent
   project's directory. If unset, the value of the `:relative-path` of
   Leiningen's `:parent` vector will be used, and if that's unset, the
