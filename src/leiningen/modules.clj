@@ -123,7 +123,8 @@
     (do
       (println " Module build order:")
       (doseq [p modules]
-        (println "  " (:name p))))))
+        (println "  " (:name p)))
+      (map id modules))))
 
 (defn modules
   "Run a task for all related projects in dependency order.

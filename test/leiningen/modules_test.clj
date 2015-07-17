@@ -63,7 +63,8 @@
         child   (io/file "test-resources/grandparent/parent/child/checkouts")
         sib     (io/file "test-resources/grandparent/parent/sibling/checkouts")]
     (try
-      (modules (prj/read "test-resources/grandparent/project.clj") ":checkouts")
+      (is (= (modules (prj/read "test-resources/grandparent/project.clj") ":checkouts")
+            '(parent/parent sibling/sibling child/child)))
       (is (not (.exists grandpa)))
       (is (not (.exists dad)))
       (is (not (.exists sib)))
@@ -75,11 +76,15 @@
 (deftest dirs "no sibling among modules so no checkouts"
   (let [dad     (io/file "test-resources/grandparent/parent/checkouts")
         child   (io/file "test-resources/grandparent/parent/child/checkouts")]
-    (modules (prj/read "test-resources/grandparent/parent/project.clj")
-      ":dirs" "child" ":checkouts")
+    (is (= (modules (prj/read "test-resources/grandparent/parent/project.clj")
+             ":dirs" "child" ":checkouts")
+          '(child/child)))
     (is (not (.exists dad)))
     (is (not (.exists child)))))
 
 (deftest configless-modules
   (let [p (prj/init-project (prj/read "test-resources/configless/project.clj"))]
     (is (= ["kidA" "kidB"] (->> p ordered-builds (map :name))))))
+
+(deftest childless-module
+  (is (empty? (modules (prj/read "test-resources/configless/kidA/project.clj") "deps"))))
