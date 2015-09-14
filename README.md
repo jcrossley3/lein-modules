@@ -254,13 +254,13 @@ version itself will be tried as a key.
                 :repositories [["project:odd upstream"
                                 "http://repository-projectodd.forge.cloudbees.com/upstream"]]
                 :aliases      {"all" ^:displace ["do" "clean," "test," "install"]
-                               "-f" ["with-profile" "+fast"]}}
+                               "-f" ["with-profile" "+fast"]}
                 :mailing-list {:name "Immutant users list"
                                :post "immutant-users@immutant.org"}
                 :url          "http://immutant.org"
                 :scm          {:dir ".."}
                 :license      {:name "Apache Software License - v 2.0"
-                               :url "http://www.apache.org/licenses/LICENSE-2.0"}
+                               :url "http://www.apache.org/licenses/LICENSE-2.0"}}
 
              :versions {org.clojure/clojure           "1.5.1"
                         leiningen-core                "2.3.4"
