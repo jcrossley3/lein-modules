@@ -132,7 +132,10 @@
         (doseq [p modules]
           (if-not quiet?
             (println "  " (:name p))
-            (println (:name p)))))))
+            (println (:name p))))
+
+        ;; For the test suite, return all children.
+        (map id modules))))
 
 (defn modules
   "Run a task for all related projects in dependency order.
