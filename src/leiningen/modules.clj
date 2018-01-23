@@ -116,15 +116,23 @@
     (str "(" (second args) ")")
     ""))
 
-(defn dump-modules
-  [modules]
+(defn print-modules
+  "If running in 'quiet' mode, only prints the located modules.
+
+  Otherwise prints a more human-formatted modules list."
+  
+  [{:keys [quiet?]} modules]
   (if (empty? modules)
-    (println "No modules found")
-    (do
-      (println " Module build order:")
-      (doseq [p modules]
-        (println "  " (:name p)))
-      (map id modules))))
+    (if-not quiet?
+      (println "No modules found"))
+
+    ;; There are modules
+    (do (if-not quiet?
+          (println " Module build order:"))
+        (doseq [p modules]
+          (if-not quiet?
+            (println "  " (:name p))
+            (println (:name p)))))))
 
 (defn modules
   "Run a task for all related projects in dependency order.
@@ -147,9 +155,13 @@ And you can limit which modules run the task with the :dirs option:
   $ lein modules :dirs core,web install
 
 Delimited by either comma or colon, this list of relative paths
-will override the [:modules :dirs] config in project.clj"
+will override the [:modules :dirs] config in project.clj
+
+Accepts '-q', '--quiet' and ':quiet' to suppress non-subprocess output."
   [project & args]
-  (condp = (first args)
+  (let [[quiet? args] ((juxt some remove) #{"-q" "--quiet" ":quiet"} args)
+        {:keys [quiet?] :as opts} {:quiet? (boolean quiet?)}]
+    (condp = (first args)
     ":checkouts" (do
                    (checkout-dependencies project)
                    (apply modules project (remove #{":checkouts"} args)))
@@ -159,18 +171,20 @@ will override the [:modules :dirs] config in project.clj"
                   (assoc-in [:modules :dirs] dirs)
                   (vary-meta assoc-in [:without-profiles :modules :dirs] dirs))
                 (drop 2 args)))
-    nil (dump-modules (ordered-builds project))
+    nil (print-modules opts (ordered-builds project))
     (let [modules (ordered-builds project)
           profiles (compressed-profiles project)
           args (cli-with-profiles profiles args)
           subprocess (get-in project [:modules :subprocess]
                        (or (System/getenv "LEIN_CMD")
                          (if (= :windows (utils/get-os)) "lein.bat" "lein")))]
-      (dump-modules modules)
+      (when-not quiet?
+        (print-modules opts modules))
       (doseq [project modules]
-        (println "------------------------------------------------------------------------")
-        (println " Building" (:name project) (:version project) (dump-profiles args))
-        (println "------------------------------------------------------------------------")
+        (when-not quiet?
+          (println "------------------------------------------------------------------------")
+          (println " Building" (:name project) (:version project) (dump-profiles args))
+          (println "------------------------------------------------------------------------"))
         (if-let [cmd (get-in project [:modules :subprocess] subprocess)]
           (binding [eval/*dir* (:root project)]
             (let [exit-code (apply eval/sh (cons cmd args))]
@@ -178,4 +192,4 @@ will override the [:modules :dirs] config in project.clj"
                 (throw (ex-info "Subprocess failed" {:exit-code exit-code})))))
           (let [project (prj/init-project project)
                 task (main/lookup-alias (first args) project)]
-            (main/apply-task task project (rest args))))))))
+            (main/apply-task task project (rest args)))))))))
