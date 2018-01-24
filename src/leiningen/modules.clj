@@ -163,6 +163,7 @@ will override the [:modules :dirs] config in project.clj
 Accepts '-q', '--quiet' and ':quiet' to suppress non-subprocess output."
   [project & args]
   (let [[quiet? args] ((juxt some remove) #{"-q" "--quiet" ":quiet"} args)
+        quiet? (or quiet? (-> project :modules :quiet))
         {:keys [quiet?] :as opts} {:quiet? (boolean quiet?)}]
     (condp = (first args)
     ":checkouts" (do
@@ -171,7 +172,8 @@ Accepts '-q', '--quiet' and ':quiet' to suppress non-subprocess output."
     ":dirs" (let [dirs (s/split (second args) #"[:,]")]
               (apply modules
                 (-> project
-                  (assoc-in [:modules :dirs] dirs)
+                    (assoc-in [:modules :dirs] dirs)
+                    (assoc-in [:modules :quiet] quiet?)
                   (vary-meta assoc-in [:without-profiles :modules :dirs] dirs))
                 (drop 2 args)))
     nil (print-modules opts (ordered-builds project))
