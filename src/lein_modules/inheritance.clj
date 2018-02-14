@@ -20,11 +20,9 @@
   (->> (for [k (keys m)
              :when (.contains (name k) "-paths")]
          [k (mapv (fn [p]
-                    (if (string? p)
-                      (let [pf (io/file p)]
-                        (.getAbsolutePath
-                         (if-not (.isAbsolute pf)
-                           (io/file root p) pf)))
+                    (if (and (string? p) (.startsWith p "//"))
+                      (.getAbsolutePath
+                       (io/file root (.replaceFirst p "//" "")))
                       p))
                   (get m k))])
        (into {})
