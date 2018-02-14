@@ -1,7 +1,8 @@
 (ns lein-modules.inheritance
   (:use [lein-modules.common :only (config parent)]
         [lein-modules.compression :only (compressed-profiles)])
-  (:require [leiningen.core.project :as prj]))
+  (:require [leiningen.core.project :as prj]
+            [clojure.java.io :as io]))
 
 (def normalizer (partial map (comp prj/dependency-vec prj/dependency-map)))
 
@@ -12,6 +13,22 @@
   (if (:dependencies m)
     (with-meta (update-in m [:dependencies] normalizer) (meta m))
     m))
+
+(defn normalize-paths
+  "Converts any path lists in the profile to absolute paths."
+  [m {:keys [root] :as project}]
+  (->> (for [k (keys m)
+             :when (.contains (name k) "-paths")]
+         [k (mapv (fn [p]
+                    (if (string? p)
+                      (let [pf (io/file p)]
+                        (.getAbsolutePath
+                         (if-not (.isAbsolute pf)
+                           (io/file root p) pf)))
+                      p))
+                  (get m k))])
+       (into {})
+       (merge m)))
 
 (defn filter-profiles
   "We don't want to inherit the non-project-specific profiles or any
@@ -33,22 +50,25 @@
       (-> v meta ::composited) (assoc m k v)
       :else (let [n (keyword (format "%s%s-%s" (or (namespace k) "") (name k) (:name project)))]
               (assoc (update-in m [k] #(vec (cons n %)))
-                n (vary-meta (normalize-deps v) assoc ::composited true))))))
+                     n (vary-meta (-> v
+                                      (normalize-deps)
+                                      (normalize-paths project))
+                                  assoc ::composited true))))))
 
 (defn compositize-profiles
   "Return a profile map containing all the profiles found in the
   project and its ancestors, resulting in standard profiles,
   e.g. :test and :dev, becoming composite"
   ([project]
-     (compositize-profiles project (compressed-profiles project)))
+   (compositize-profiles project (compressed-profiles project)))
   ([project active-profiles]
-     (loop [p project, result nil]
-       (if (nil? p)
-         result
-         (recur (parent p active-profiles)
-           (reduce (compositor p) result
-             (conj (select-keys (:modules p) [:inherited])
-               (filter-profiles (:profiles (meta p))))))))))
+   (loop [p project, result nil]
+     (if (nil? p)
+       result
+       (recur (parent p active-profiles)
+              (reduce (compositor p) result
+                      (conj (select-keys (:modules p) [:inherited])
+                            (filter-profiles (:profiles (meta p))))))))))
 
 (defn inherit
   "Add profiles from parents, setting any :inherited ones if found,
@@ -57,7 +77,7 @@
   (let [current (compressed-profiles project)
         compost (compositize-profiles project current)]
     (-> (prj/add-profiles project compost)
-      (vary-meta update-in [:profiles] merge compost)
-      (prj/set-profiles (if (:inherited compost)
-                          (cons :inherited current)
-                          current)))))
+        (vary-meta update-in [:profiles] merge compost)
+        (prj/set-profiles (if (:inherited compost)
+                            (cons :inherited current)
+                            current)))))
