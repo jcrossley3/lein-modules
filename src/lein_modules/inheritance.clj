@@ -17,16 +17,20 @@
 (defn normalize-paths
   "Converts any path lists in the profile to absolute paths."
   [m {:keys [root] :as project}]
-  (->> (for [k (keys m)
-             :when (.contains (name k) "-paths")]
-         [k (mapv (fn [p]
+  (as-> m %
+    (for [[k v] %
+          :when (.contains (name k) "-paths")]
+         [k (with-meta
+              (mapv (fn [p]
                     (if (and (string? p) (.startsWith p "//"))
                       (.getAbsolutePath
                        (io/file root (.replaceFirst p "//" "")))
                       p))
-                  (get m k))])
-       (into {})
-       (merge m)))
+                    v)
+              (meta v))])
+       (into {} %)
+       (merge m %)
+       (with-meta % (meta m))))
 
 (defn filter-profiles
   "We don't want to inherit the non-project-specific profiles or any
