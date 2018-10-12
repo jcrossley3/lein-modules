@@ -79,6 +79,13 @@
   "Sort a representation of interdependent projects topologically"
   (comp topological-sort interdependence progeny))
 
+(defn- relativize
+  "Returns the path to target relative to dir, as a String"
+  [dir target]
+  (-> (.relativize (.toPath dir) (.toPath target))
+    (.normalize)
+    str))
+
 (defn create-checkouts
   "Create checkout symlinks for interdependent projects"
   [projects]
@@ -90,8 +97,9 @@
         (println "Checkouts for" (:name project))
         (binding [eval/*dir* dir]
           (doseq [dep deps]
-            (eval/sh "rm" "-f" (:name dep))
-            (eval/sh "ln" "-sv" (:root dep) (:name dep))))))))
+            (let [target-name (relativize dir (io/file (:root dep)))]
+              (eval/sh "rm" "-f" (:name dep))
+              (eval/sh "ln" "-sv" target-name (:name dep)))))))))
 
 (def checkout-dependencies
   "Setup checkouts/ for a project and its interdependent children"
