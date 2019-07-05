@@ -33,12 +33,17 @@
         ver)
       opts)))
 
+(def project-versions (atom {}))
+(defn set-project-versions! [vs] (reset! project-versions vs))
+
 (defn versionize
   "Substitute versions in dependency vectors with actual versions from
   the :versions modules config"
   [project]
-  (let [vmap (merge (select-keys project [:version]) (versions project))
+  (let [vmap (merge (select-keys project [:version])
+                    @project-versions
+                    (versions project))
         f #(with-meta (for [d %] (expand-version d vmap)) (meta %))]
     (-> project
-      (update-in [:dependencies] f)
-      (update-in [:parent] expand-version vmap))))
+        (update-in [:dependencies] f)
+        (update-in [:parent] expand-version vmap))))

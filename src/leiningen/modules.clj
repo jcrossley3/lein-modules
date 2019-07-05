@@ -7,7 +7,8 @@
             [clojure.string :as s])
   (:use [lein-modules.inheritance :only (inherit)]
         [lein-modules.common      :only (parent with-profiles read-project)]
-        [lein-modules.compression :only (compressed-profiles)]))
+        [lein-modules.compression :only (compressed-profiles)]
+        [lein-modules.versionization :only (set-project-versions!)]))
 
 (defn child?
   "Return true if child is an immediate descendant of project"
@@ -120,7 +121,7 @@
   "If running in 'quiet' mode, only prints the located modules.
 
   Otherwise prints a more human-formatted modules list."
-  
+
   [{:keys [quiet?]} modules]
   (if (empty? modules)
     (if-not quiet?
@@ -131,7 +132,7 @@
           (println " Module build order:"))
         (doseq [p modules]
           (if-not quiet?
-            (println "  " (:name p))
+            (println "  " (:name p) "/" (:version p))
             (println (:name p))))
 
         ;; For the test suite, return all children.
@@ -178,6 +179,7 @@ Accepts '-q', '--quiet' and ':quiet' to suppress non-subprocess output."
                 (drop 2 args)))
     nil (print-modules opts (ordered-builds project))
     (let [modules (ordered-builds project)
+          vs (reduce #(assoc % (id %2) (:version %2)) {} modules)
           profiles (compressed-profiles project)
           args (cli-with-profiles profiles args)
           subprocess (get-in project [:modules :subprocess]
@@ -185,6 +187,7 @@ Accepts '-q', '--quiet' and ':quiet' to suppress non-subprocess output."
                          (if (= :windows (utils/get-os)) "lein.bat" "lein")))]
       (when-not quiet?
         (print-modules opts modules))
+      (set-project-versions! vs)
       (doseq [project modules]
         (when-not quiet?
           (println "------------------------------------------------------------------------")
