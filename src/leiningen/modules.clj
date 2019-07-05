@@ -7,7 +7,8 @@
             [clojure.string :as s])
   (:use [lein-modules.inheritance :only (inherit)]
         [lein-modules.common      :only (parent with-profiles read-project)]
-        [lein-modules.compression :only (compressed-profiles)]))
+        [lein-modules.compression :only (compressed-profiles)]
+        [lein-modules.versionization :only (set-project-versions!)]))
 
 (defn child?
   "Return true if child is an immediate descendant of project"
@@ -120,7 +121,7 @@
   "If running in 'quiet' mode, only prints the located modules.
 
   Otherwise prints a more human-formatted modules list."
-  
+
   [{:keys [quiet?]} modules]
   (if (empty? modules)
     (if-not quiet?
@@ -131,11 +132,17 @@
           (println " Module build order:"))
         (doseq [p modules]
           (if-not quiet?
-            (println "  " (:name p))
+            (println "  " (:name p) "/" (:version p))
             (println (:name p))))
 
         ;; For the test suite, return all children.
         (map id modules))))
+
+(defn- ensure-project-versions [project]
+  (let [modules (ordered-builds project)
+        vs (reduce #(assoc % (id %2) (:version %2)) {} modules)]
+    (set-project-versions! vs)
+    modules))
 
 (defn modules
   "Run a task for all related projects in dependency order.
@@ -170,14 +177,15 @@ Accepts '-q', '--quiet' and ':quiet' to suppress non-subprocess output."
                    (checkout-dependencies project)
                    (apply modules project (remove #{":checkouts"} args)))
     ":dirs" (let [dirs (s/split (second args) #"[:,]")]
+              (ensure-project-versions project)
               (apply modules
-                (-> project
-                    (assoc-in [:modules :dirs] dirs)
-                    (assoc-in [:modules :quiet] quiet?)
-                  (vary-meta assoc-in [:without-profiles :modules :dirs] dirs))
-                (drop 2 args)))
+                     (-> project
+                         (assoc-in [:modules :dirs] dirs)
+                         (assoc-in [:modules :quiet] quiet?)
+                         (vary-meta assoc-in [:without-profiles :modules :dirs] dirs))
+                     (drop 2 args)))
     nil (print-modules opts (ordered-builds project))
-    (let [modules (ordered-builds project)
+    (let [modules (ensure-project-versions project)
           profiles (compressed-profiles project)
           args (cli-with-profiles profiles args)
           subprocess (get-in project [:modules :subprocess]
