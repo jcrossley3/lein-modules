@@ -34,7 +34,7 @@
       opts)))
 
 (def project-versions (atom {}))
-(defn set-project-versions! [vs] (reset! project-versions vs))
+(defn set-project-versions! [vs] (swap! project-versions merge vs))
 
 (defn versionize
   "Substitute versions in dependency vectors with actual versions from

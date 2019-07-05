@@ -138,6 +138,12 @@
         ;; For the test suite, return all children.
         (map id modules))))
 
+(defn- ensure-project-versions [project]
+  (let [modules (ordered-builds project)
+        vs (reduce #(assoc % (id %2) (:version %2)) {} modules)]
+    (set-project-versions! vs)
+    modules))
+
 (defn modules
   "Run a task for all related projects in dependency order.
 
@@ -171,15 +177,15 @@ Accepts '-q', '--quiet' and ':quiet' to suppress non-subprocess output."
                    (checkout-dependencies project)
                    (apply modules project (remove #{":checkouts"} args)))
     ":dirs" (let [dirs (s/split (second args) #"[:,]")]
+              (ensure-project-versions project)
               (apply modules
-                (-> project
-                    (assoc-in [:modules :dirs] dirs)
-                    (assoc-in [:modules :quiet] quiet?)
-                  (vary-meta assoc-in [:without-profiles :modules :dirs] dirs))
-                (drop 2 args)))
+                     (-> project
+                         (assoc-in [:modules :dirs] dirs)
+                         (assoc-in [:modules :quiet] quiet?)
+                         (vary-meta assoc-in [:without-profiles :modules :dirs] dirs))
+                     (drop 2 args)))
     nil (print-modules opts (ordered-builds project))
-    (let [modules (ordered-builds project)
-          vs (reduce #(assoc % (id %2) (:version %2)) {} modules)
+    (let [modules (ensure-project-versions project)
           profiles (compressed-profiles project)
           args (cli-with-profiles profiles args)
           subprocess (get-in project [:modules :subprocess]
@@ -187,7 +193,6 @@ Accepts '-q', '--quiet' and ':quiet' to suppress non-subprocess output."
                          (if (= :windows (utils/get-os)) "lein.bat" "lein")))]
       (when-not quiet?
         (print-modules opts modules))
-      (set-project-versions! vs)
       (doseq [project modules]
         (when-not quiet?
           (println "------------------------------------------------------------------------")
