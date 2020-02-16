@@ -1,6 +1,27 @@
-# lein-modules [![Build Status](https://travis-ci.org/jcrossley3/lein-modules.png?branch=master)](https://travis-ci.org/jcrossley3/lein-modules)
+# lein-multi-modules
 
-This [Leiningen](https://github.com/technomancy/leiningen) plugin
+**This repo** is a fork of [lein-modules](https://github.com/jcrossley3/lein-modules), a [Leinigen](https://github.com/technomancy/leiningen) plugin.
+
+It adds:
+
+1. timing to each execution
+2. parallel execution by specifying `-p <threads>`
+
+### Usage:
+
+Add a dependency to `[com.skipgear/lein-multi-modules "0.4.0"]`.
+
+Single threaded: lein modules do clean, check, build`
+
+Parallel: `lein modules -p 4 do clean, check, build`
+
+### Note to upstream repo maintainers
+*Please do feel free to pull these features back into [lein-modules](https://github.com/jcrossley3/lein-modules) or other forks if they are of interest.*
+
+The following is the README.md from `lein-modules`:
+
+# lein-modules
+
 provides the benefits of Maven
 [multi-module projects](http://maven.apache.org/guides/mini/guide-multiple-modules.html)
 without setting your hair on fire. It works well for a related suite
